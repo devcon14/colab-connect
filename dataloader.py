@@ -87,14 +87,6 @@ def av_forex(pairs):
 
   # consider candle_date to avoid sql keywords
   sec_arr = []
-  # for pair in ["EUR/USD", "EUR/CHF", "EUR/GBP", "EUR/CAD"]:
-  # for pair in ["USD/EUR", "CHF/EUR", "GBP/EUR", "CAD/EUR"]:
-  # for pair in ["AUD/EUR", "NZD/EUR"]:
-  # for pair in ["GBP/USD", "JPY/USD", "CHF/USD"]:
-  # for pair in ["GBP/USD"]:
-  # for pair in ["CAD/USD", "NZD/USD", "AUD/USD"]:
-  # for pair in ["USD/JPY", "EUR/JPY", "CAD/JPY"]:
-  # for pair in ["AUD/JPY", "NZD/JPY", "GBP/JPY"]:
   for pair in pairs:
     print (pair)
     sec = web.DataReader(pair, "av-forex-daily", api_key=ALPHAVANTAGE_API)
