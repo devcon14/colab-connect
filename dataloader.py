@@ -80,7 +80,12 @@ def gather_sentiment():
 # https://colab.research.google.com/notebooks/bigquery.ipynb#scrollTo=UMKGkkZEPVRu
 
 # %%
-def av_forex(pairs):
+def gather_av(pairs, source="av-forex-daily"):
+  """
+  Sources:
+  av-forex-daily
+  av-daily
+  """
   import pandas_datareader.data as web
   import pandas as pd
   from time import sleep
@@ -89,7 +94,7 @@ def av_forex(pairs):
   sec_arr = []
   for pair in pairs:
     print (pair)
-    sec = web.DataReader(pair, "av-forex-daily", api_key=ALPHAVANTAGE_API)
+    sec = web.DataReader(pair, source, api_key=ALPHAVANTAGE_API)
     sec["returns"] = sec["close"] - sec["close"].shift(1)
     sec["symbol"] = pair
     sec["date"] = pd.to_datetime(sec.index)
