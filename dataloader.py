@@ -80,7 +80,7 @@ def gather_sentiment():
 # https://colab.research.google.com/notebooks/bigquery.ipynb#scrollTo=UMKGkkZEPVRu
 
 # %%
-def gather_av(pairs, source="av-forex-daily"):
+def gather_av(pairs, ALPHAVANTAGE_API, source="av-forex-daily"):
   """
   Sources:
   av-forex-daily
