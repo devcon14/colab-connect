@@ -1,6 +1,8 @@
 # %%
 import numpy as np
+from datetime import date
 from numba import jit
+
 # https://stackoverflow.com/questions/18618288/how-do-i-convert-dates-into-iso-8601-datetime-format-in-a-pandas-dataframe
 if False:
     df = train
