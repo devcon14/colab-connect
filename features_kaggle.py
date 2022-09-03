@@ -1,4 +1,5 @@
 # %%
+import numpy as np
 from numba import jit
 # https://stackoverflow.com/questions/18618288/how-do-i-convert-dates-into-iso-8601-datetime-format-in-a-pandas-dataframe
 if False:
@@ -117,7 +118,8 @@ def stats_ta(df, series, prefix, period, add_zscore=False):
     if add_zscore:
         df[f'{prefix}_zscore_{period}D'] = z
         df[f'{prefix}_std_{period}D'] = s
-        
+
+# %%
 def get_features(sec):
     sec["ft_ta_win_streak"] = sec["close"].rolling(10).apply(win_streak_nb, engine="numba", raw=True)
     sec["ft_ta_loss_streak"] = sec["close"].rolling(10).apply(loss_streak_nb, engine="numba", raw=True)
