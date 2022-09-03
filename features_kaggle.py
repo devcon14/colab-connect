@@ -118,11 +118,12 @@ def stats_ta(df, series, prefix, period, add_zscore=False):
         df[f'{prefix}_zscore_{period}D'] = z
         df[f'{prefix}_std_{period}D'] = s
         
- def get_features(sec):
+def get_features(sec):
     sec["ft_ta_win_streak"] = sec["close"].rolling(10).apply(win_streak_nb, engine="numba", raw=True)
     sec["ft_ta_loss_streak"] = sec["close"].rolling(10).apply(loss_streak_nb, engine="numba", raw=True)
     sec.loc[:, f"ft_dt_bizday-n"] = sec["date"].map(lambda x: bizday(x))
     sec.loc[:, f"ft_dt_bizday+n"] = sec["date"].map(lambda x: bizday(x, reverse=False))
     sec.loc[:, "ft_dt_dow_wom_code"] = sec["date"].map(lambda x: f"{x.dayofweek}:{dow_month_code(x)}")
+    # stats_ta(sec, sec["close"], "ft_ta", 14)
     
         
