@@ -1,4 +1,5 @@
 # %%
+import pandas as pd
 import numpy as np
 from datetime import date
 from numba import jit
