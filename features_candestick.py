@@ -32,11 +32,11 @@ def get_features_cnd(sec):
   # the strat
   sec["tmp_high_1"] = sec["high"].shift(1)
   sec["tmp_low_1"] = sec["low"].shift(1)
-  sec["ft_can_inside_bar"] = (sec["high"] < sec["tmp_high_1"]) & (sec["low"] > sec["tmp_low_1"])
+  sec["ft_cnd_inside_bar"] = (sec["high"] < sec["tmp_high_1"]) & (sec["low"] > sec["tmp_low_1"])
   # engulfing / outside bar
-  sec["ft_can_engulfing"] = (sec["high"] > sec["tmp_high_1"]) & (sec["low"] < sec["tmp_low_1"])
-  sec["ft_can_green_soldier"] = (sec["high"] > sec["tmp_high_1"]) & (sec["low"] > sec["tmp_low_1"])
-  sec["ft_can_red_soldier"] = (sec["high"] < sec["tmp_high_1"]) & (sec["low"] < sec["tmp_low_1"])
+  sec["ft_cnd_engulfing"] = (sec["high"] > sec["tmp_high_1"]) & (sec["low"] < sec["tmp_low_1"])
+  sec["ft_cnd_green_soldier"] = (sec["high"] > sec["tmp_high_1"]) & (sec["low"] > sec["tmp_low_1"])
+  sec["ft_cnd_red_soldier"] = (sec["high"] < sec["tmp_high_1"]) & (sec["low"] < sec["tmp_low_1"])
   
 
 def get_features_pa(sec):
