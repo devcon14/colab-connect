@@ -1,3 +1,6 @@
+from backtesting import Backtest, Strategy
+from backtesting.lib import crossover
+
 def Highest(values, n):
   return pd.Series(values).rolling(n).max()
 
@@ -148,6 +151,7 @@ class BailoutStrategy(SimpleBase, TimedImpl, BailoutImpl, OpenAndCloseImpl):
     self.bailout_exit()
     self.timed_exit()
 
+# stop order test
 class BreakoutStrategy(Strategy):
   highest_period = 10
   lowest_period = 10
@@ -168,3 +172,19 @@ class BreakoutStrategy(Strategy):
         print (trade.entry_bar, len(self.data))
         print (trade.entry_price, self.data["High"])
 
+# %%
+if False:
+  import numpy as np
+
+  stats = bt.optimize(
+      # timed_exit_period=range(3, 30),
+      # bailout_exit_period=range(1, 20),
+      bailout_pnl=range(0, 200, 50),
+      # R=list(np.arange(1.0, 5.5, 0.5)),
+      # maximize='Equity Final [$]',
+      maximize='Profit Factor',
+      # constraint=lambda param: param.bailout_exit_period < param.timed_exit_period
+      )
+
+  print (stats._strategy)
+  print (stats)
