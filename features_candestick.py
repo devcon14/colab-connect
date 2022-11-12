@@ -39,13 +39,15 @@ def get_features_cnd(sec):
   sec["ft_cnd_red_soldier"] = (sec["high"] < sec["tmp_high_1"]) & (sec["low"] < sec["tmp_low_1"])
   
 
-def get_features_pa(sec):
+def get_features_ta(sec):
   # %%
   # 40in20out
   sec["ft_high_past_40"] = sec["high"].rolling(40).max()
+  sec["ft_low_past_40"] = sec["low"].rolling(40).min()
+  sec["ft_high_past_20"] = sec["low"].rolling(20).min()
   sec["ft_low_past_20"] = sec["low"].rolling(20).min()
   sec["ft_cross_high_40"] = (sec["ft_high_past_40"] > sec["ft_high_past_40"].shift(1))
-  sec["ft_cross_low_20"] = (sec["ft_low_past_20"] > sec["ft_low_past_20"].shift(1))
+  sec["ft_cross_low_40"] = (sec["ft_low_past_40"] > sec["ft_low_past_40"].shift(1))
   sec.ft_cross_high_40.sum()
 
   # %%
