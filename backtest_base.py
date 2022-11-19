@@ -1,3 +1,4 @@
+import pandas as pd
 from backtesting import Backtest, Strategy
 from backtesting.lib import crossover
 
@@ -113,7 +114,17 @@ class BracketImpl:
     else:
       crash
 
+class MinimalStrategy(Strategy):
 
+  def init(self):
+    pass
+
+  def next(self):
+    if self.data["Signal_long"]:
+      self.buy()
+    if self.data["Signal_short"]:
+      self.sell()
+      
 class SimpleBase(Strategy):
   highest_period = 20
   lowest_period = 20
