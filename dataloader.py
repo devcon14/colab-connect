@@ -173,3 +173,31 @@ if __name__ == "__main__":
   sec = get_av_api(ALPHAVANTAGE_API, "FXY")
   print (sec)
   # dxy = web.DataReader("UUP", "av-daily", api_key=ALPHAVANTAGE_API)
+
+# %%
+try:
+  import quandl
+except:
+  !pip install quandl
+  import quandl
+
+def quandl_get_btc():
+  import pandas as pd
+  # BCHAIN/DIFF
+  bchain_price = quandl.get("BCHAIN/MKPRU")
+  # bchain_price.plot()
+
+  sec = bchain_price.copy()
+  sec["close"] = sec["Value"]
+  sec["open"] = sec["high"] = sec["low"] = sec["close"]
+  sec["symbol"] = "BTC/USD"
+  sec["date"] = pd.to_datetime(sec.index)
+  sec["returns"] = sec["close"] - sec["close"].shift()
+  del sec["Value"]
+  sec_all = sec.copy()
+  sec_all = sec_all[sec_all.close!=0.00]
+  return sec_all
+
+if __name__ == "__main__":
+  sec = quandl_get_btc()
+  
