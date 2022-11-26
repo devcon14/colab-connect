@@ -108,3 +108,68 @@ if __name__ == "__main__":
       av_forex(["AUD/JPY", "NZD/JPY", "GBP/JPY"])
   )
   
+# %%
+def get_drive_csv(pairs, resolution="Hour"):
+  import pandas as pd
+
+  from pathlib import Path
+
+  df_arr = []
+  for csvzip in Path("/content/drive/MyDrive/market_data/").glob("*.zip"):
+    print (csvzip)
+    for pair in pairs:
+      if pair in csvzip.name and resolution in csvzip.name:
+        df = pd.read_csv(csvzip)
+        df["Instrument"] = csvzip.name[:6]
+        df["Returns"] = df["Close"] - df["Close"].shift()
+        df["Dttm"] = pd.to_datetime(df["Local time"])
+        # bigquery doesn't like the name
+        del df["Local time"]
+        df_arr.append(df)
+
+  sec_all = pd.concat(df_arr)
+  return sec_all
+
+if __name__ == "__main__":
+  HOURLY_CHARTS = True
+  # "SPY", "DIA", "GBR"
+  sec_all = get_drive_csv(pairs=["GBPJPY", "EURUSD"])
+  print (sec_all)
+  sec = sec_all.query("Instrument=='GBPJPY'")
+  sec.columns = sec.columns.str.lower()
+  print (sec)
+
+# %%
+def get_av_api(symbol, ALPHAVANTAGE_API, function='TIME_SERIES_DAILY_ADJUSTED'):
+  """
+  If endpoints change or become premium sometimes only option while waiting for
+  web.DataReader to update.
+  """
+  import requests
+
+  # looks like we need to use Daily Adjusted instead of Daily now
+  # yahoo could be another potencial replacement
+
+  # replace the "demo" apikey below with your own key from https://www.alphavantage.co/support/#api-key
+  symbol = "FXY"
+
+  """
+  url = f'https://www.alphavantage.co/query?function={function}&symbol={symbol}&apikey={ALPHAVANTAGE_API}'
+  r = requests.get(url)
+  data = r.json()
+  """
+
+  url = f'https://www.alphavantage.co/query?function={function}&symbol={symbol}&apikey={ALPHAVANTAGE_API}&datatype=csv'
+  r = requests.get(url)
+  bytes_csv = r.content
+
+  import pandas as pd
+  from io import StringIO
+
+  return pd.read_csv(StringIO(bytes_csv.decode("utf8")))  
+
+if __name__ == "__main__":
+  # FXY, UUP, GLD
+  sec = get_av_api(ALPHAVANTAGE_API, "FXY")
+  print (sec)
+  # dxy = web.DataReader("UUP", "av-daily", api_key=ALPHAVANTAGE_API)
