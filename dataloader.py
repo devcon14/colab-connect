@@ -140,7 +140,7 @@ if __name__ == "__main__":
   print (sec)
 
 # %%
-def get_av_api(symbol, ALPHAVANTAGE_API, function='TIME_SERIES_DAILY_ADJUSTED'):
+def get_av_api(symbol, ALPHAVANTAGE_API, function='TIME_SERIES_DAILY_ADJUSTED', params=''):
   """
   If endpoints change or become premium sometimes only option while waiting for
   web.DataReader to update.
@@ -159,7 +159,7 @@ def get_av_api(symbol, ALPHAVANTAGE_API, function='TIME_SERIES_DAILY_ADJUSTED'):
   data = r.json()
   """
 
-  url = f'https://www.alphavantage.co/query?function={function}&symbol={symbol}&apikey={ALPHAVANTAGE_API}&datatype=csv'
+  url = f'https://www.alphavantage.co/query?function={function}&symbol={symbol}&apikey={ALPHAVANTAGE_API}&datatype=csv{params}'
   r = requests.get(url)
   bytes_csv = r.content
 
