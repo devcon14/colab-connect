@@ -176,12 +176,6 @@ if __name__ == "__main__":
   # dxy = web.DataReader("UUP", "av-daily", api_key=ALPHAVANTAGE_API)
 
 # %%
-try:
-  import quandl
-except:
-  # !pip install quandl
-  import quandl
-
 def quandl_get_btc():
   import pandas as pd
   # BCHAIN/DIFF
@@ -200,5 +194,10 @@ def quandl_get_btc():
   return sec_all
 
 if __name__ == "__main__":
+  try:
+    import quandl
+  except:
+    !pip install quandl
+    import quandl
   sec = quandl_get_btc()
   
