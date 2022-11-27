@@ -171,6 +171,7 @@ def get_av_api(symbol, ALPHAVANTAGE_API, function='TIME_SERIES_DAILY_ADJUSTED', 
 if __name__ == "__main__":
   # FXY, UUP, GLD
   sec = get_av_api(ALPHAVANTAGE_API, "FXY")
+  # sec = get_av_api('BTC', ALPHAVANTAGE_API, 'DIGITAL_CURRENCY_DAILY', params='&market=USD')
   print (sec)
   # dxy = web.DataReader("UUP", "av-daily", api_key=ALPHAVANTAGE_API)
 
@@ -178,7 +179,7 @@ if __name__ == "__main__":
 try:
   import quandl
 except:
-  !pip install quandl
+  # !pip install quandl
   import quandl
 
 def quandl_get_btc():
