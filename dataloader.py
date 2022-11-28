@@ -43,7 +43,47 @@ def gather_econdb():
 
 if __name__ == "__main__":
   gather_econdb()
-  
+
+# %%
+def get_econdb_fx():
+  # NOTE ticker id is in the series part of the url
+  # https://www.econdb.com/series/Y10YDJP/japan-long-term-yield/
+  # use CPI for (IS) inflation
+
+  # today's stats with inflation
+  # https://econdb.com/country_stats/crosstable/?format=csv
+  # Maybe quandl for inflation although YOY updated monthly: RATEINF/INFLATION_USA, RATEINF/INFLATION_JPN
+  import pandas as pd
+
+  dataframes = {}
+  _stat_items = [
+      ("CPI US", "CPIUS"),
+      ("Unemployment US", "URATEUS")
+  ]
+  stat_items = [
+      ("CPI Japan", "CPIJP"),
+      ("Yield JP", "Y10YDJP"),
+      ("Unemployment JP", "URATEJP"),
+      ("CPI US", "CPIUS"),
+      ("Yield US", "Y10YDUS"),
+      ("Unemployment US", "URATEUS")
+      ]
+  for name, ticker_id in stat_items:
+    print (name)
+    dataframes[ticker_id] = pd.read_csv(
+      f'https://www.econdb.com/api/series/{ticker_id}/?format=csv',
+      index_col='Date', parse_dates=['Date'])
+  return dataframes
+
+if __name__ == "__main__":
+  dataframes = get_econdb_fx()
+  import pandas as pd
+  from functools import reduce
+
+  # dataframes["CPIUS"]
+  df = reduce(lambda x, y: pd.merge(x, y, on="Date"), dataframes.values())
+  display(df)
+
 # %%
 """
 https://www.myfxbook.com/community/outlook
@@ -144,6 +184,7 @@ def get_av_api(symbol, ALPHAVANTAGE_API, function='TIME_SERIES_DAILY_ADJUSTED', 
   """
   If endpoints change or become premium sometimes only option while waiting for
   web.DataReader to update.
+  # For BTC: alphavantage daily only till 2019-12-24 ...
   """
   import requests
 
@@ -197,7 +238,59 @@ if __name__ == "__main__":
   try:
     import quandl
   except:
-    !pip install quandl
+    # !pip install quandl
     import quandl
   sec = quandl_get_btc()
-  
+
+# %%
+def quandl_get_cot(currency):
+  # quandl COT
+  # https://www.tradingview.com/script/B6J550VX-COT-Report-Indicator/
+  include_options = "" # "O" or ""
+  # largest 4 long, short etc..
+  use_concentration = "" # "_CR" or ""
+  # legacy goes much further back but not as detailed
+  legacy_format = "" # "_L" or ""
+
+  code = "098662" # USD index (ICUS) / ICE?
+  code = "116661" # NYCE:EUR/USD
+  code = "099741" # CME:EURO
+
+  # CME codes
+  # all their instruments seem relative to USD, interest rate futures might be useful
+  codes = {
+      "EUR": "099741",
+      "JPY": "097741",
+      "AUD": "232741",
+      "CAD": "090741",
+      "GBP": "096742",
+      "NZD": "112741",
+      "CHF": "092741"
+  }
+  code = codes[currency]
+
+  dataset_code = f"CFTC/{code}_F{include_options}{legacy_format}_ALL{use_concentration}"
+  print (dataset_code)
+  df = quandl.get(dataset_code)
+
+  df["ft_fnd_cot_leverage_funds_net_long"] = df["Leveraged Funds Longs"] - df["Leveraged Funds Shorts"]
+  df["ft_fnd_cot_dealer_net_long"] = df["Dealer Longs"] - df["Dealer Shorts"]
+  df["ft_fnd_asset_manager_net_long"] = df["Asset Manager Longs"] - df["Asset Manager Shorts"]
+
+  # shows as Monday or Tuesday
+  # df["dt_dow"] = df.index.dayofweek
+  # df["dt_dow"] = df.index.strftime("%a")
+  return df
+
+if __name__ == "__main__":
+  try:
+    import quandl
+  except:
+    # !pip install quandl
+    import quandl
+
+  df = quandl_get_cot("EUR")
+  display(
+      # df[["Leveraged Funds Longs", "Leveraged Funds Shorts", "Open Interest"]]
+      df
+  )
