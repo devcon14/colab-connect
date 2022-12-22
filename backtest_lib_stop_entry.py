@@ -1,3 +1,5 @@
+import pandas as pd
+
 # %%
 # utility functions
 def get_ft_level(price_level, signal_array, index=None):
