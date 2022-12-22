@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 # %%
 # utility functions
@@ -62,7 +63,7 @@ class StopEntryStrategy(Strategy):
 
 def get_bt_results(bt_df):
   bt = Backtest(bt_df,
-                ManualSmash,
+                StopEntryStrategy,
                 cash=10000,
                 trade_on_close=True,
                 exclusive_orders=True,
