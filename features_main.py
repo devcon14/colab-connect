@@ -1,4 +1,4 @@
-from features_candestick import get_features_cnd
+from features_candlestick import get_features_cnd
 # 40in20out, volume spike
 from features_candlestick import get_features_ta as get_features_tmp_ta
 
