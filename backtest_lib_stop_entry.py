@@ -31,8 +31,8 @@ except Exception as e:
   from backtesting import Backtest, Strategy
   from backtesting.lib import crossover
 
-def fn_signal_long(): return sec["signal_long"]
-def fn_signal_short(): return sec["signal_short"]
+# def fn_signal_long(): return sec["signal_long"]
+# def fn_signal_short(): return sec["signal_short"]
 
 class StopEntryStrategy(Strategy):
   # one means exit on same day
@@ -41,10 +41,14 @@ class StopEntryStrategy(Strategy):
   max_delay = 13
 
   def init(self):
+
+    def fn_signal_long(): return self.data.Signal_long
+    def fn_signal_short(): return self.data.Signal_short
+
     self.is_signal_long = self.I(fn_signal_long, overlay=False)
     self.is_signal_short = self.I(fn_signal_short, overlay=False)
-    self.buy_stop = self.I(get_ft_level, self.data.High, self.is_signal_long.s)
-    self.sell_stop = self.I(get_ft_level, self.data.Low, self.is_signal_short.s)
+    self.buy_stop = self.I(get_ft_level, self.data.High, self.data.Signal_long, overlay=True)
+    self.sell_stop = self.I(get_ft_level, self.data.Low, self.data.Signal_short, overlay=True)
 
   def timed_exit(self):
     if self.position:
