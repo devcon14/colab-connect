@@ -46,24 +46,31 @@ class StopEntryStrategy(Strategy):
     self.buy_stop = self.I(get_ft_level, self.data.High, self.is_signal_long.s)
     self.sell_stop = self.I(get_ft_level, self.data.Low, self.is_signal_short.s)
 
-  def next(self):
-    if not self.position:
-      if self.is_signal_long:
-        self.buy(stop=self.data["High"])
-      elif self.is_signal_short:
-        self.sell(stop=self.data["Low"])
-
-    else:
+  def timed_exit(self):
+    if self.position:
       for trade in self.trades:
         if len(self.data) - trade.entry_bar >= self.max_delay:
             trade.close()
         if len(self.data) - trade.entry_bar >= self.exit_delay:
           if trade.pl > 0:
             trade.close()
+  
+  def postprocess(self):
+    self.timed_exit()
+    
+  def next(self):
+    if not self.position:
+      if self.is_signal_long:
+        self.buy(stop=self.data["High"])
+      elif self.is_signal_short:
+        self.sell(stop=self.data["Low"])
+        
+    self.postprocess()
 
-def get_bt_results(bt_df):
+def get_bt_results(sec, StrategyClass=StopEntryStrategy):
+  bt_df = bt_convert_frame(sec)
   bt = Backtest(bt_df,
-                StopEntryStrategy,
+                StrategyClass,
                 cash=10000,
                 trade_on_close=True,
                 exclusive_orders=True,
