@@ -1,3 +1,10 @@
+# %%
+try:
+  from backtesting import Backtest, Strategy
+except Exception as e:
+  # !pip install backtesting
+  from backtesting import Backtest, Strategy
+
 class MarketStrategy(Strategy):
 
   def init(self):
