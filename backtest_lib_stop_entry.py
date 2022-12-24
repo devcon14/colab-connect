@@ -50,15 +50,17 @@ class StopEntryStrategy(Strategy):
     self.buy_stop = self.I(get_ft_level, self.data.High, self.data.Signal_long, overlay=True)
     self.sell_stop = self.I(get_ft_level, self.data.Low, self.data.Signal_short, overlay=True)
 
-  def timed_exit(self):
+  def timed_exit(self, on_profit=False):
     if self.position:
       for trade in self.trades:
         if len(self.data) - trade.entry_bar >= self.max_delay:
             trade.close()
         if len(self.data) - trade.entry_bar >= self.exit_delay:
-          if trade.pl > 0:
+          if not on_profit:
             trade.close()
-  
+          elif on_profit and trade.pl > 0:
+            trade.close()
+    
   def postprocess(self):
     self.timed_exit()
     
