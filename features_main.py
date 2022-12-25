@@ -7,3 +7,9 @@ from features_kaggle import get_features as get_features_kaggle
 
 # chart features, date features
 # def get_all_features
+
+# %%
+def get_features_indicators(sec):
+  # sec["ft_ta_stoch_p14"] = ta.stoch(close=sec.close, high=sec.high, low=sec.low, length=14)["STOCHk_14_3_3"]
+  sec["ft_ta_rsi_p2"] = ta.rsi(close=sec.close, length=2)
+  sec["ft_ta_sma_p200"] = sec["close"].rolling(200).mean()
