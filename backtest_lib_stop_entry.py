@@ -73,7 +73,10 @@ class StopEntryStrategy(Strategy):
         
     self.postprocess()
 
+from backtest_lib import def fill_empty_bt_columns
+
 def get_bt_results(sec, StrategyClass=StopEntryStrategy):
+  fill_empty_bt_columns(sec)  
   bt_df = bt_convert_frame(sec)
   bt = Backtest(bt_df,
                 StrategyClass,
