@@ -1,3 +1,9 @@
+def crossunder(arr, val):
+  return (arr.shift(1) > val) & (arr < val)
+
+def crossover(arr, val):
+  return (arr.shift(1) < val) & (arr > val)
+
 def fill_empty_bt_columns(sec):
    if "signal_short" not in sec.columns:
       sec["signal_short"] = False
@@ -7,4 +13,3 @@ def fill_empty_bt_columns(sec):
       sec["signal_long_exit"] = False
    if "signal_long" not in sec.columns:
       sec["signal_long"] = False
-
