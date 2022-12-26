@@ -126,3 +126,16 @@ def optimum_1d(symbol, filter_query, x_feature):
     data_count = sec_flt.future_returns.count()
     return pn.indicators.Number(name='Mean Returns', value=data_returns, format='{value:.5f}')
 
+# %%
+# do we call this a multiplier or divisor?
+def create_bin_field(field_name, multiplier):
+  # or floor, ceil, round
+  sec[f"{field_name}_bin"] = sec[field_name].apply(lambda x: int(x / multiplier) * multiplier)
+  # print (sec[f"{field_name}_bin"].iloc[-5:])
+  return sec[f"{field_name}_bin"].iloc[-5:]
+
+if __name__ == "__main__":
+  sec = df_mg
+  # print(df_mg.columns)
+  dashlet_binner = interact(create_bin_field, field_name=["ft_im_bottom_div", 'ft_im_WOOD_dspidiv'], multiplier=[1.0, 2, 5, 10.0, 100.0])
+  display(dashlet_binner)
