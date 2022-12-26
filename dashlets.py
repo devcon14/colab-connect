@@ -78,15 +78,16 @@ if __name__ == "__main__":
   display(instrument_selector(sec_inst, etfs, start_vals))
 
 # %%
-def optimum_1d(symbol, filter_query, x_feature):
+def optimum_1d(symbol, filter_query, x_feature, return_field = "returns"):
 
   # --- symbol select, prep features
   sec = sec_all.query(f"symbol=='{symbol}'").copy()
-  sec["bt_pct_change"] = sec["close"].pct_change()
-  sec["future_returns"] = sec["close"].shift(5) - sec["close"]
 
+  sec["pct_change"] = sec["close"].pct_change()
+  # sec["future_returns"] = sec["close"].shift(5) - sec["close"]
   # force 1 day returns
-  sec["returns"] = sec["close"].shift() - sec["close"]
+  if "returns" not in sec.columns:
+    sec["returns"] = sec["close"].shift() - sec["close"]
   sec["all"] = True
 
   # binning
@@ -94,7 +95,6 @@ def optimum_1d(symbol, filter_query, x_feature):
   # sec[f"ft_im_{compare_symbol}_dspidiv_bin"] = (sec[f"ft_im_{compare_symbol}_dspidiv"] * 10.0).astype(int)
   # ---
 
-  return_field = "returns"
   sec_flt = sec.query(filter_query)
   if x_feature:
     # data_returns = sec_flt.query(filter_query).groupby(x_feature)["ddratio"].mean()
@@ -144,6 +144,7 @@ if __name__ == "__main__":
       create_bin_field,
       field_name=["ft_im_bottom_div", 'ft_im_WOOD_dspidiv', "ft_ta_rsi_p2"],
       step_multiplier=[1.0, 2, 5, 10.0, 100.0],
-      na_val=[0, None, 50]
+      na_val=[0, None, 50],
+      return_field=["returns", "future_returns", "mfe"]
       )
   display(dashlet_binner)
