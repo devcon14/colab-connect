@@ -83,11 +83,12 @@ def optimum_1d(symbol, filter_query, x_feature, return_field = "returns"):
   # --- symbol select, prep features
   sec = sec_all.query(f"symbol=='{symbol}'").copy()
 
-  sec["pct_change"] = sec["close"].pct_change()
   # sec["future_returns"] = sec["close"].shift(5) - sec["close"]
   # force 1 day returns
   if "returns" not in sec.columns:
     sec["returns"] = sec["close"].shift() - sec["close"]
+  if "change" not in sec.columns:
+    sec["change"] = sec["close"].pct_change()
   sec["all"] = True
 
   # binning
@@ -97,9 +98,7 @@ def optimum_1d(symbol, filter_query, x_feature, return_field = "returns"):
 
   sec_flt = sec.query(filter_query)
   if x_feature:
-    # data_returns = sec_flt.query(filter_query).groupby(x_feature)["ddratio"].mean()
     data_returns = sec_flt.query(filter_query).groupby(x_feature)[return_field].mean()
-    # data_returns = sec_flt.groupby(x_feature).pct_change.mean()
     data_count = sec_flt.groupby(x_feature)[return_field].count()
     
     # avoid divide by 0 in some situations
@@ -122,8 +121,8 @@ def optimum_1d(symbol, filter_query, x_feature, return_field = "returns"):
     # return mg.hvplot.line()
     # return pn.Row(      data_returns.hvplot(),      # data_count.hvplot()  )
   else:
-    data_returns = sec_flt.pct_change.mean()
-    data_count = sec_flt.future_returns.count()
+    data_returns = sec_flt[return_field].mean()
+    data_count = sec_flt[return_field].count()
     return pn.indicators.Number(name='Mean Returns', value=data_returns, format='{value:.5f}')
 
 # %%
