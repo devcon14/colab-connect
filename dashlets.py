@@ -99,7 +99,7 @@ def optimum_1d(symbol, filter_query, x_feature, return_field = "returns"):
   if x_feature:
     # data_returns = sec_flt.query(filter_query).groupby(x_feature)["ddratio"].mean()
     data_returns = sec_flt.query(filter_query).groupby(x_feature)[return_field].mean()
-    # data_returns = sec_flt.groupby(x_feature).bt_pct_change.mean()
+    # data_returns = sec_flt.groupby(x_feature).pct_change.mean()
     data_count = sec_flt.groupby(x_feature)[return_field].count()
     
     # avoid divide by 0 in some situations
@@ -122,7 +122,7 @@ def optimum_1d(symbol, filter_query, x_feature, return_field = "returns"):
     # return mg.hvplot.line()
     # return pn.Row(      data_returns.hvplot(),      # data_count.hvplot()  )
   else:
-    data_returns = sec_flt.bt_pct_change.mean()
+    data_returns = sec_flt.pct_change.mean()
     data_count = sec_flt.future_returns.count()
     return pn.indicators.Number(name='Mean Returns', value=data_returns, format='{value:.5f}')
 
