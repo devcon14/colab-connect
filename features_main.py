@@ -1,3 +1,4 @@
+import pandas as pd
 from features_candlestick import get_features_cnd
 # 40in20out, volume spike
 # for trend and setting stops
