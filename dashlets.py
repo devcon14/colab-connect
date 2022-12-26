@@ -1,4 +1,10 @@
 # %%
+# global module variables
+ALPHAVANTAGE_API = None
+sec_all = None
+sec = None
+
+# %%
 try:
   import hvplot.pandas
 except:
@@ -24,6 +30,7 @@ def get_viz_features(sec):
     # -- cycles
     sec_all["ts_dt_decennial"] = pd.Series(sec_all["date"].dt.year % 10).astype(str) + sec_all["date"].dt.strftime(":%m")
     sec_all["ts_dt_shmita"] = pd.Series(sec_all["date"].dt.year % 7).astype(str) + sec_all["date"].dt.strftime(":%m")
+    sec_all["ts_dt_season_13"] = pd.Series(sec_all["date"].dt.year % 13).astype(str) + sec_all["date"].dt.strftime(":%m")
     sec_all["ts_dt_election"] = pd.Series(sec_all["date"].dt.year % 4).astype(str) + sec_all["date"].dt.strftime(":%m")
     # -- doy
     # sec_all[f"ts_dt_doy"] = sec_all["date"].dt.dayofyear
@@ -40,9 +47,9 @@ def add_data(sec_inst, symbols, drill_down, chart_type):
     if not symbol in sec_inst.sec_dict.keys():
       print (f"Loading {symbol}")
       if "/" in symbol:
-        sec = web.DataReader(symbol, "av-forex-daily", api_key=ALPHAVANTAGE_API)
+        sec = web.DataReader(symbol, "av-forex-daily", api_key=sec_inst.ALPHAVANTAGE_API)
       else:
-        sec = web.DataReader(symbol, "av-daily-adjusted", api_key=ALPHAVANTAGE_API)
+        sec = web.DataReader(symbol, "av-daily-adjusted", api_key=sec_inst.ALPHAVANTAGE_API)
       sec["symbol"] = symbol
       sec = sec.sort_index()
       get_viz_features(sec)
@@ -54,6 +61,7 @@ def add_data(sec_inst, symbols, drill_down, chart_type):
 
   PREFIX = "ft_" # ts, plt, ft
   data_plt = sec_inst.sec_all.groupby(["symbol", f"ts_dt_{drill_down}"])["change"].mean()
+  # data_plt = data_plt.sort_values(f"ts_dt_{drill_down}")
   data_plt = data_plt.reset_index()
   data_plt["cumsum"] = data_plt.change.cumsum()
 
@@ -68,7 +76,7 @@ def instrument_selector(sec_inst, currency_pairs = ["EUR/USD", "GBP/USD", "CHF/U
       add_data,
       sec_inst=sec_inst,
       symbols=pn.widgets.MultiChoice(options=currency_pairs, value=["EUR/USD"]),
-      drill_down=pn.widgets.Select(options=["YM", "decennial", "shmita", "election", "doy", "dom", "dow"]),
+      drill_down=pn.widgets.Select(options=["YM", "decennial", "shmita", "season_13", "election", "doy", "dom", "dow"]),
       chart_type=["line", "bar"]
       )
   return dashlet_select
@@ -78,6 +86,7 @@ class Universe:
   sec_arr = []
   sec_dict = {}
   sec_all = None
+  ALPHAVANTAGE_API = ALPHAVANTAGE_API
 
 if __name__ == "__main__":
   pn.extension(comms="colab")
