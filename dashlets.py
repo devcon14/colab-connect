@@ -90,3 +90,53 @@ if __name__ == "__main__":
   # start_vals = ["EUR/USD", "GBP/USD", "CHF/USD"]
   start_vals = ["GLD"]
   display(instrument_selector(sec_inst, etfs, start_vals))
+
+# %%
+def optimum_1d(symbol, filter_query, x_feature):
+
+  # --- symbol select, prep features
+  sec = sec_all.query(f"symbol=='{symbol}'").copy()
+  sec["bt_pct_change"] = sec["close"].pct_change()
+  sec["future_returns"] = sec["close"].shift(5) - sec["close"]
+
+  # force 1 day returns
+  sec["returns"] = sec["close"].shift() - sec["close"]
+  sec["all"] = True
+
+  # binning
+  # sec["ft_im_bottom_div_bin"] = (sec["ft_im_bottom_div"] * 10.0).astype(int)
+  # sec[f"ft_im_{compare_symbol}_dspidiv_bin"] = (sec[f"ft_im_{compare_symbol}_dspidiv"] * 10.0).astype(int)
+  # ---
+
+  return_field = "returns"
+  sec_flt = sec.query(filter_query)
+  if x_feature:
+    # data_returns = sec_flt.query(filter_query).groupby(x_feature)["ddratio"].mean()
+    data_returns = sec_flt.query(filter_query).groupby(x_feature)[return_field].mean()
+    # data_returns = sec_flt.groupby(x_feature).bt_pct_change.mean()
+    data_count = sec_flt.groupby(x_feature)[return_field].count()
+    
+    # avoid divide by 0 in some situations
+    GET_WINRATE = False
+    if GET_WINRATE:
+      # win count
+      data_winrate = sec_flt.query(filter_query).groupby(x_feature).apply(lambda x: sum(x[return_field] >= 0) / x[return_field].count() * 100.0)
+      mg = pd.concat([data_returns, data_count, data_winrate], axis="columns")
+      mg.columns = ["mean", "count", "winrate"]
+    else:
+      mg = pd.concat([data_returns, data_count], axis="columns")
+      mg.columns = ["mean", "count"]
+      mg["mean_str"] = mg["mean"].apply(lambda x: f"{x:.6f}")
+
+    # mg["pctcumsum"] = mg["mean"].cumsum()
+    # print (mg)
+    # data_returns.plot()
+    # return data_returns.hvplot.line()
+    return mg.hvplot.bar(y="mean", hover_cols=["count", "winrate", "mean_str"])
+    # return mg.hvplot.line()
+    # return pn.Row(      data_returns.hvplot(),      # data_count.hvplot()  )
+  else:
+    data_returns = sec_flt.bt_pct_change.mean()
+    data_count = sec_flt.future_returns.count()
+    return pn.indicators.Number(name='Mean Returns', value=data_returns, format='{value:.5f}')
+
