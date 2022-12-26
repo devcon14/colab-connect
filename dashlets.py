@@ -16,7 +16,7 @@ import panel as pn
 from panel import interact
 import pandas_datareader.data as web
 import pandas as pd
-from features_main import get_viz_features
+from features_main import get_features_viz as get_viz_features
 
 def add_data(sec_inst, symbols, drill_down, chart_type):
   global sec, sec_dict, sec_all
