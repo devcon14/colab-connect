@@ -1,6 +1,6 @@
 # %%
 # global module variables
-# ALPHAVANTAGE_API = None
+ALPHAVANTAGE_API = None
 sec_all = None
 sec = None
 
