@@ -1,6 +1,6 @@
 # %%
 # global module variables
-ALPHAVANTAGE_API = None
+# ALPHAVANTAGE_API = None
 sec_all = None
 sec = None
 
@@ -16,30 +16,7 @@ import panel as pn
 from panel import interact
 import pandas_datareader.data as web
 import pandas as pd
-
-def get_viz_features(sec):
-    # must apply with 1 symbol
-    sec["change"] = sec["close"].pct_change()
-
-    # can apply with all
-    sec_all = sec
-    sec_all["date"] = pd.to_datetime(sec_all.index)
-
-    # -- YM
-    sec_all["ts_dt_YM"] = sec_all["date"].dt.strftime("%Y:%m")
-    # -- cycles
-    sec_all["ts_dt_decennial"] = pd.Series(sec_all["date"].dt.year % 10).astype(str) + sec_all["date"].dt.strftime(":%m")
-    sec_all["ts_dt_shmita"] = pd.Series(sec_all["date"].dt.year % 7).astype(str) + sec_all["date"].dt.strftime(":%m")
-    sec_all["ts_dt_season_13"] = pd.Series(sec_all["date"].dt.year % 13).astype(str) + sec_all["date"].dt.strftime(":%m")
-    sec_all["ts_dt_election"] = pd.Series(sec_all["date"].dt.year % 4).astype(str) + sec_all["date"].dt.strftime(":%m")
-    # -- doy
-    # sec_all[f"ts_dt_doy"] = sec_all["date"].dt.dayofyear
-    sec_all[f"ts_dt_doy"] = sec_all["date"].dt.strftime("%m:%b:%d")
-    # -- dom
-    sec_all["ts_dt_dom"] = sec_all["date"].dt.day
-    # -- dow
-    # sec_all.loc[:, f"ts_dt_dow"] = sec_all["date"].dt.dayofweek
-    sec_all[f"ts_dt_dow"] = sec_all["date"].dt.strftime("%w:%a")
+from features_main import get_viz_features
 
 def add_data(sec_inst, symbols, drill_down, chart_type):
   global sec, sec_dict, sec_all
