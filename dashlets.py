@@ -38,7 +38,8 @@ def add_data(universe, symbols, drill_down, chart_type):
 
   universe.sec_arr = universe.sec_dict.values()
   universe.sec_all = pd.concat(universe.sec_arr)
-
+  universe.sec_all = universe.sec_all.sort_values(["date", "symbol"])
+  
   PREFIX = "ft_" # ts, plt, ft
   data_plt = universe.sec_all.groupby(["symbol", f"ts_dt_{drill_down}"])["change"].mean()
   # data_plt = data_plt.sort_values(f"ts_dt_{drill_down}")
