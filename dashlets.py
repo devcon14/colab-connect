@@ -55,7 +55,7 @@ def instrument_selector(universe, currency_pairs = ["EUR/USD", "GBP/USD", "CHF/U
 
   dashlet_select = interact(
       add_data,
-      sec_inst=sec_inst,
+      universe=universe,
       symbols=pn.widgets.MultiChoice(options=currency_pairs, value=["EUR/USD"]),
       drill_down=pn.widgets.Select(options=["YM", "decennial", "shmita", "season_13", "election", "doy", "dom", "dow"]),
       chart_type=["line", "bar"]
@@ -67,6 +67,7 @@ class Universe:
   sec_arr = []
   sec_dict = {}
   sec_all = None
+  # sec_mg = None
   ALPHAVANTAGE_API = ALPHAVANTAGE_API
 
 if __name__ == "__main__":
