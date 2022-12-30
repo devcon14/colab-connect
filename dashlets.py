@@ -23,10 +23,13 @@ def add_data(sec_inst, symbols, drill_down, chart_type):
   for symbol in symbols:
     if not symbol in sec_inst.sec_dict.keys():
       print (f"Loading {symbol}")
-      if "/" in symbol:
-        sec = web.DataReader(symbol, "av-forex-daily", api_key=sec_inst.ALPHAVANTAGE_API)
+      if hasattr(sec_inst, "reader_fn"):
+        sec_inst.reader_fn(symbol)
       else:
-        sec = web.DataReader(symbol, "av-daily-adjusted", api_key=sec_inst.ALPHAVANTAGE_API)
+        if "/" in symbol:
+          sec = web.DataReader(symbol, "av-forex-daily", api_key=sec_inst.ALPHAVANTAGE_API)
+        else:
+          sec = web.DataReader(symbol, "av-daily-adjusted", api_key=sec_inst.ALPHAVANTAGE_API)
       sec["symbol"] = symbol
       sec = sec.sort_index()
       get_viz_features(sec)
