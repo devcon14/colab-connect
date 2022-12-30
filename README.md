@@ -1,11 +1,9 @@
 # colab-connect
 
-My personal shared utility library for market data analysis on google colaboratory
+Personal utility library for market data analysis on google colaboratory
 
-* storing backtests for trading strategies I come across and want to try out
+* storing backtests and results for trading strategies I come across
 * strategy visualisation and optimisation
-
-The architecture I'm aiming for:
 
 ```mermaid
 graph TD
@@ -13,7 +11,9 @@ graph TD
     B[Metatrader 5]
     C[Backtesting.py]
     D[Visualisation]
+    E[Data]
 
+    E-->|Broker,Bigquery|A
     A-->|Trade Live|B
     A-->|Backtest|C
     A-->|Optimise|D
