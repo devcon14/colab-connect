@@ -53,7 +53,6 @@ def add_data(universe, symbols, drill_down, chart_type):
     xkey = drill_down
   else:
     xkey = f"ts_dt_{drill_down}"
-  print (xkey)
 
   PREFIX = "ft_" # ts, plt, ft
   grp = universe.sec_all.groupby(["symbol", xkey])["change"].agg(["mean", "std"])
