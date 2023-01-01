@@ -16,10 +16,11 @@ import panel as pn
 from panel import interact
 import pandas_datareader.data as web
 import pandas as pd
-from features_main import get_features_viz as get_viz_features
+# from features_main import get_features_viz as get_viz_features
+from features_main import get_features_dttm
 
 def add_data(universe, symbols, drill_down, chart_type):
-  global sec, sec_dict, sec_all
+
   for symbol in symbols:
     if not symbol in universe.sec_dict.keys():
       print (f"Loading {symbol}")
@@ -32,33 +33,52 @@ def add_data(universe, symbols, drill_down, chart_type):
           sec = web.DataReader(symbol, "av-daily-adjusted", api_key=universe.ALPHAVANTAGE_API)
       sec["symbol"] = symbol
       sec = sec.sort_index()
-      get_viz_features(sec)
+      get_features_dttm(sec)
       # sec = sec.sort_values("date")
       universe.sec_dict[symbol] = sec
+
+  # remove orphans
+  orphans = []
+  for symbol in universe.sec_dict.keys():
+    if symbol not in symbols:
+      orphans.append(symbol)
+  for orphan in orphans:
+    del universe.sec_dict[orphan]
 
   universe.sec_arr = universe.sec_dict.values()
   universe.sec_all = pd.concat(universe.sec_arr)
   universe.sec_all = universe.sec_all.sort_values(["date", "symbol"])
-  
+
+  if "ft" in drill_down:
+    xkey = drill_down
+  else:
+    xkey = f"ts_dt_{drill_down}"
+  print (xkey)
+
   PREFIX = "ft_" # ts, plt, ft
-  data_plt = universe.sec_all.groupby(["symbol", f"ts_dt_{drill_down}"])["change"].mean()
-  # data_plt = data_plt.sort_values(f"ts_dt_{drill_down}")
-  data_plt = data_plt.reset_index()
-  data_plt["cumsum"] = data_plt.change.cumsum()
+  grp = universe.sec_all.groupby(["symbol", xkey])["change"].agg(["mean", "std"])
+  data_plt = grp.reset_index()
+  data_plt["cumsum"] = data_plt["mean"].cumsum()
 
   if chart_type == "bar":
-    return data_plt.hvplot.bar(x=f"ts_dt_{drill_down}", y="cumsum", by="symbol")
-  else:
-    return data_plt.hvplot.line(x=f"ts_dt_{drill_down}", y="cumsum", by="symbol")
+    return data_plt.hvplot.bar(x=xkey, y="cumsum", by="symbol")
+  elif chart_type == "error":
+    line_plt = data_plt.hvplot.line(x=xkey, y="cumsum", by="symbol")
+    error_plt = data_plt.hvplot.errorbars(x=xkey, y="cumsum", yerr1="std", by="symbol")
+    return line_plt * error_plt
+  elif chart_type == "line":
+    line_plt = data_plt.hvplot.line(x=xkey, y="cumsum", by="symbol")
+    return line_plt
 
-def instrument_selector(universe, currency_pairs = ["EUR/USD", "GBP/USD", "CHF/USD", "JPY/USD", "AUD/USD", "CAD/USD"], value=["EUR/USD"]):
+
+def instrument_selector(universe, currency_pairs, value, chart_type):
 
   dashlet_select = interact(
       add_data,
       universe=universe,
-      symbols=pn.widgets.MultiChoice(options=currency_pairs, value=["EUR/USD"]),
-      drill_down=pn.widgets.Select(options=["YM", "decennial", "shmita", "season_13", "election", "doy", "dom", "dow"]),
-      chart_type=["line", "bar"]
+      symbols=pn.widgets.MultiChoice(options=currency_pairs, value=value),
+      drill_down=pn.widgets.Select(options=["YM", "decennial", "shmita", "season_9", "season_13", "election", "doy", "ft_dt_bizday-n", "ft_dt_bizday+n", "dom", "dow"]),
+      chart_type=chart_type
       )
   return dashlet_select
 
@@ -74,13 +94,16 @@ if __name__ == "__main__":
   pn.extension(comms="colab")
   # hv.extension("bokeh")
 
-  sec_inst = Universe()
+  universe = Universe()
+  universe.ALPHAVANTAGE_API = ALPHAVANTAGE_API
+  # universe.reader_fn = av_reader
 
   majors = ["EUR/USD", "GBP/USD", "CHF/USD", "JPY/USD", "AUD/USD", "CAD/USD"]
   etfs = ["SPY", "GLD", "UUP", "SLV"]
   # start_vals = ["EUR/USD", "GBP/USD", "CHF/USD"]
   start_vals = ["GLD"]
-  display(instrument_selector(sec_inst, etfs, start_vals))
+  dashlet_instrument = instrument_selector(universe, etfs, start_vals, ["line", "bar", "error"])
+  display(dashlet_instrument)
 
 # %%
 def optimum_1d(symbol, filter_query, x_feature, return_field = "returns"):
