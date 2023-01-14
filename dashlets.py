@@ -317,7 +317,7 @@ def interactable_plot(
     range_start=None,
     # range_length=None,
     future_horizon=None,
-    bin_steps=None
+    bin_steps=0
 ):
 
   return_field = ykey
