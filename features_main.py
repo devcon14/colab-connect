@@ -12,14 +12,25 @@ from features_kaggle import get_features as get_features_kaggle
 # def get_all_features
 
 # %%
-def get_features_indicators(sec):
+def get_features_indicators(sec, periods=[2]):
   import pandas_ta as ta
-  # sec["ft_ta_stoch_p14"] = ta.stoch(close=sec.close, high=sec.high, low=sec.low, length=14)["STOCHk_14_3_3"]
-  sec["ft_ta_rsi_p2"] = ta.rsi(close=sec.close, length=2)
   sec["ft_ta_sma_p200"] = sec["close"].rolling(200).mean()
+  
+  for period in periods:
+    # sec["ft_ta_stoch_p14"] = ta.stoch(close=sec.close, high=sec.high, low=sec.low, length=14)["STOCHk_14_3_3"]
+    sec[f"ft_ta_rsi_p{period}"] = ta.rsi(close=sec.close, length=period)
+    sec[f"ft_ta_kj_trend_up_p{period}"] = sec["close"] > sec["close"].shift(period)
 
 # %%
-def get_features_viz(sec):
+def get_features_viz_tt(sec):
+  from finta import TA
+  df = TA.WILLIAMS_FRACTAL(sec, period=2)
+  # print (df)
+  sec["viz_bearish_fractal"] = df["BearishFractal"]
+  sec["viz_bullish_fractal"] = df["BullishFractal"]
+    
+# %%
+def get_features_viz(sec, prefix="ts", tt=False):
   # must apply with 1 symbol
   sec["change"] = sec["close"].pct_change()
 
@@ -28,28 +39,40 @@ def get_features_viz(sec):
   sec_all["date"] = pd.to_datetime(sec_all.index)
 
   # -- YM
-  sec_all["ts_dt_YM"] = sec_all["date"].dt.strftime("%Y:%m")
+  sec_all[f"{prefix}_dt_YM"] = sec_all["date"].dt.strftime("%Y:%m")
   # -- cycles
-  sec_all["ts_dt_election"] = pd.Series(sec_all["date"].dt.year % 4).astype(str) + sec_all["date"].dt.strftime(":%m")
-  sec_all["ts_dt_shmita"] = pd.Series(sec_all["date"].dt.year % 7).astype(str) + sec_all["date"].dt.strftime(":%m")
-  sec_all["ts_dt_season_9"] = pd.Series(sec_all["date"].dt.year % 9).astype(str) + sec_all["date"].dt.strftime(":%m")
-  sec_all["ts_dt_decennial"] = pd.Series(sec_all["date"].dt.year % 10).astype(str) + sec_all["date"].dt.strftime(":%m")
-  sec_all["ts_dt_season_13"] = pd.Series(sec_all["date"].dt.year % 13).astype(str) + sec_all["date"].dt.strftime(":%m")
+  sec_all[f"{prefix}_dt_election"] = pd.Series(sec_all["date"].dt.year % 4).astype(str) + sec_all["date"].dt.strftime(":%m")
+  sec_all[f"{prefix}_dt_shmita"] = pd.Series(sec_all["date"].dt.year % 7).astype(str) + sec_all["date"].dt.strftime(":%m")
+  sec_all[f"{prefix}_dt_season_9"] = pd.Series(sec_all["date"].dt.year % 9).astype(str) + sec_all["date"].dt.strftime(":%m")
+  sec_all[f"{prefix}_dt_decennial"] = pd.Series(sec_all["date"].dt.year % 10).astype(str) + sec_all["date"].dt.strftime(":%m")
+  sec_all[f"{prefix}_dt_season_13"] = pd.Series(sec_all["date"].dt.year % 13).astype(str) + sec_all["date"].dt.strftime(":%m")
+  # armstrong
+  try:
+    DATE_FIELD = "date"
+    as_cycle_months = 8.615384615*12
+    as_num = sec_all[DATE_FIELD].dt.year * 12 + sec_all[DATE_FIELD].dt.month
+    sec_all[f"{prefix}_dt_as_cycle"] = (as_num % as_cycle_months).astype(int)
+  except:
+    print ("armstrong failed")
+  
   # -- doy
-  # sec_all[f"ts_dt_doy"] = sec_all["date"].dt.dayofyear
-  sec_all[f"ts_dt_doy"] = sec_all["date"].dt.strftime("%m:%b:%d")
+  # sec_all[f"{prefix}_dt_doy"] = sec_all["date"].dt.dayofyear
+  sec_all[f"{prefix}_dt_doy"] = sec_all["date"].dt.strftime("%m:%b:%d")
   # -- dom
-  sec_all["ts_dt_dom"] = sec_all["date"].dt.day
+  sec_all[f"{prefix}_dt_dom"] = sec_all["date"].dt.day
   # -- dow
-  # sec_all.loc[:, f"ts_dt_dow"] = sec_all["date"].dt.dayofweek
-  sec_all[f"ts_dt_dow"] = sec_all["date"].dt.strftime("%w:%a")
-
+  # sec_all.loc[:, f"{prefix}_dt_dow"] = sec_all["date"].dt.dayofweek
+  sec_all[f"{prefix}_dt_dow"] = sec_all["date"].dt.strftime("%w:%a")
+  
+  if tt:
+    get_features_viz_tt(sec)
+  
 # %%
 from features_kaggle import bizday, dow_month_code as wom_for_dow
 import pandas as pd
 
 def get_features_dttm(sec):
-  get_features_viz(sec)
+  get_features_viz(sec, prefix="ft")
   # sec["date"] = pd.to_datetime(sec.index)
   
   sec.loc[:, f"ft_dt_bizday-n"] = sec["date"].map(lambda x: bizday(x))
