@@ -261,6 +261,7 @@ class Universe:
       universe.sec_all["bin_target"] = universe.sec_all[f"{field_name}_bin"]
     except:
       print (f"probably non numeric bin field {field_name}")
+      universe.sec_all[f"{field_name}_bin"] = universe.sec_all[field_name]
     return universe.sec_all[f"{field_name}_bin"].iloc[-5:]
 
   def fetch_symbols_data(universe, symbols, resolution="1D"):
