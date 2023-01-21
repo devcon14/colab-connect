@@ -326,7 +326,7 @@ class Universe:
       # data_plt["color"] = universe.sec_all.groupby([split_by, xkey])[color_field].agg([agg_fn]).reset_index()[agg_fn]
       colors = universe.sec_all.groupby([split_by, xkey])[color_field].agg([agg_fn])
       # make indices align by converting to plain series
-      colors = colors.reset_index()[color_field]
+      colors = colors.reset_index()[agg_fn]
       data_plt["color"] = colors
 
     # print (data_plt)
