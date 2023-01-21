@@ -30,7 +30,7 @@ def get_features_viz_tt(sec):
   sec["viz_bullish_fractal"] = df["BullishFractal"]
     
 # %%
-def get_features_viz(sec, prefix="ts", tt=False):
+def get_features_viz(sec, prefix="ts", tt=True):
   # must apply with 1 symbol
   sec["change"] = sec["close"].pct_change()
 
@@ -72,7 +72,7 @@ from features_kaggle import bizday, dow_month_code as wom_for_dow
 import pandas as pd
 
 def get_features_dttm(sec):
-  get_features_viz(sec, prefix="ft")
+  get_features_viz(sec, prefix="ft", tt=True)
   # sec["date"] = pd.to_datetime(sec.index)
   
   sec.loc[:, f"ft_dt_bizday-n"] = sec["date"].map(lambda x: bizday(x))
