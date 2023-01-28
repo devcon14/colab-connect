@@ -2,7 +2,7 @@ import pandas as pd
 from features_candlestick import get_features_cnd
 # 40in20out, volume spike
 # for trend and setting stops
-from features_candlestick import get_features_ta as get_features_cnd_trend
+from features_ta import get_features_ta as get_features_cnd_trend
 
 # win streaks, stats_ta, bizdays, dow_by_week
 from features_kaggle import get_features as get_features_kaggle
