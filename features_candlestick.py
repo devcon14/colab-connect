@@ -73,3 +73,35 @@ def set_future_returns(sec, future_horizon=3):
   sec["future_returns"] = sec["close"].shift(-future_horizon) - sec["close"]
   ## sec["dpo_future_returns"] = sec["dpo"].shift(-future_horizon) - sec["dpo"]
 
+# %%
+# from 'follow the open'
+import numpy as np
+
+def get_backtest_metrics_on_df(sec, future_horizon = 5, adj=None):
+  sec["future_returns"] = sec["close"].shift(-future_horizon) - sec["close"]
+  if adj:
+    sec["future_returns"] *= adj
+
+  # ternary is for rolling window exceptions
+  # +1 on horizon fixes?, check with 1 as horizon
+  sec["mae"] = sec["close"].rolling(future_horizon+1).apply(lambda x: x[0] - np.min(x) if len(x) >= future_horizon else 0)
+  sec["mae"] = sec["mae"].shift(-future_horizon)
+  sec["mfe"] = sec["close"].rolling(future_horizon+1).apply(lambda x: np.max(x) - x[0] if len(x) >= future_horizon else 0)
+  sec["mfe"] = sec["mfe"].shift(-future_horizon)
+  sec["f2a"] = sec["mfe"] - sec["mae"]
+
+  sec["change"] = sec["close"].pct_change()
+
+  # fixed broken calculations
+  # -----------
+  # today's close - yesterday's close
+  sec["returns"] = sec["close"] - sec["close"].shift(1)
+  sec["session_returns"] = sec["close"] - sec["open"]
+  # today's open - yesterday's close
+  sec["gap_returns"] = sec["open"] - sec["close"].shift(1)
+
+  return sec
+
+if __name__ == "__main__":
+  get_backtest_metrics_on_df(sec, 1)
+  
