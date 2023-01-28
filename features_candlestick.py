@@ -38,23 +38,35 @@ def get_features_cnd(sec):
   sec["ft_cnd_green_soldier"] = (sec["high"] > sec["tmp_high_1"]) & (sec["low"] > sec["tmp_low_1"])
   sec["ft_cnd_red_soldier"] = (sec["high"] < sec["tmp_high_1"]) & (sec["low"] < sec["tmp_low_1"])
   
+# from smash days
+def backtest_features(df, future_horizon = 5):
+  df["future_returns"] = df["close"].shift(-future_horizon) - df["close"]
+  # TODO long and short mae,mfe
+  df["long_mae"] = df["close"].rolling(future_horizon).apply(lambda x: x[0] - np.min(x))
+  df["long_mae"] = df["long_mae"].shift(-future_horizon)
+  df["long_mfe"] = df["close"].rolling(future_horizon).apply(lambda x: np.max(x) - x[0])
+  df["long_mfe"] = df["long_mfe"].shift(-future_horizon)
 
-def get_features_ta(sec):
-  # %%
-  # 40in20out
-  sec["ft_high_past_40"] = sec["high"].rolling(40).max()
-  sec["ft_low_past_40"] = sec["low"].rolling(40).min()
-  sec["ft_high_past_20"] = sec["low"].rolling(20).min()
-  sec["ft_low_past_20"] = sec["low"].rolling(20).min()
-  sec["ft_cross_high_40"] = (sec["ft_high_past_40"] > sec["ft_high_past_40"].shift(1))
-  sec["ft_cross_low_40"] = (sec["ft_low_past_40"] > sec["ft_low_past_40"].shift(1))
-  sec.ft_cross_high_40.sum()
+  df["bt_pct_change"] = df["close"].pct_change()
+  # df["ddratio"] = df["future_returns"] / df["mae"]
+  df["bt_long_f2a_ratio"] = df["long_mfe"] / (df["long_mae"]+1)
 
-  # %%
-  # volume spike
-  if "volume" in sec.columns:
-    multiplier = 2.0
-    SMA = 20
-    sec["ft_volume_spike"] = sec["volume"] > multiplier * sec["volume"].rolling(SMA).mean()
-    sec["ft_volume_spike"].sum()
-    
+  # future daily returns
+  ## df["daily_returns"] = df["close"].shift(-1) - df["close"]
+  ## df["daily_session_returns"] = df["close"] - df["open"]
+  # yesterday's close - today's open
+  ## df["overnight_returns"] = df["close"].shift(1) - df["open"]
+
+  # fixed broken calculations
+  # -----------
+  # today's close - yesterday's close
+  df["returns"] = df["close"] - df["close"].shift(1)
+  df["session_returns"] = df["close"] - df["open"]
+  # today's open - yesterday's close
+  df["gap_returns"] = df["open"] - df["close"].shift(1)
+
+def set_future_returns(sec, future_horizon=3):
+  # set future returns
+  sec["future_returns"] = sec["close"].shift(-future_horizon) - sec["close"]
+  ## sec["dpo_future_returns"] = sec["dpo"].shift(-future_horizon) - sec["dpo"]
+
