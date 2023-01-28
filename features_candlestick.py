@@ -51,6 +51,9 @@ def backtest_features(df, future_horizon = 5):
   # df["ddratio"] = df["future_returns"] / df["mae"]
   df["bt_long_f2a_ratio"] = df["long_mfe"] / (df["long_mae"]+1)
 
+  # 
+  df["bt_f2a_diff"] = df["long_mfe"] - df["long_mae"]
+
   # future daily returns
   ## df["daily_returns"] = df["close"].shift(-1) - df["close"]
   ## df["daily_session_returns"] = df["close"] - df["open"]
