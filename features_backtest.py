@@ -20,8 +20,8 @@ def prior_to_future_metrics(sec, future_horizon):
   else:
     suffix = f"_p{future_horizon}"
     
-  sec[f"future_change_{suffix}"] = sec["change"].shift(-future_horizon)
-  sec[f"future_returns_{suffix}"] = sec["returns"].shift(-future_horizon)
+  sec[f"future_change{suffix}"] = sec["change"].shift(-future_horizon)
+  sec[f"future_returns{suffix}"] = sec["returns"].shift(-future_horizon)
   
 def backtest_metrics(sec, future_horizon = 5, adj=None):
   """
@@ -36,10 +36,14 @@ def backtest_metrics(sec, future_horizon = 5, adj=None):
   # ternary is for rolling window exceptions
   sec["mae"] = sec["close"].rolling(future_horizon).apply(lambda x: x[0] - np.min(x) if len(x) >= future_horizon else 0)
   sec["mae"] = sec["mae"].shift(-future_horizon)
+  sec["future_mae_p{future_horizon}"] = sec["mae"]
+  
   sec["mfe"] = sec["close"].rolling(future_horizon).apply(lambda x: np.max(x) - x[0] if len(x) >= future_horizon else 0)
   sec["mfe"] = sec["mfe"].shift(-future_horizon)
+  sec["future_mfe_p{future_horizon}"] = sec["mae"]
 
   sec["f2a"] = sec["mfe"] - sec["mae"]
+  sec["future_f2a_p{future_horizon}"] = sec["f2a"]
 
   return sec
 
