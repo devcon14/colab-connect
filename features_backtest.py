@@ -22,8 +22,7 @@ def get_backtest_metrics(sec, future_horizon = 5, adj=None):
   if adj:
     sec["future_returns"] *= adj
 
-  # TODO future pct_change?
-  sec["change"] = sec["close"].pct_change(-1)
+  sec["future_change"] = sec["close"].pct_change().shift(-1)
     
   # ternary is for rolling window exceptions
   sec["mae"] = sec["close"].rolling(future_horizon).apply(lambda x: x[0] - np.min(x) if len(x) >= future_horizon else 0)
