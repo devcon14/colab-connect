@@ -2,6 +2,7 @@
 # TODO add combo type metric code
 
 # %%
+# NOTE feature_ta combo can be used for most of these functions
 if __name__ == "__main__":
   sec_all["ft_ta_sma"] = sec_all["close"].rolling(30).mean()
   sec_all["ft_ta_dspi"] = (sec_all["close"] - sec_all["ft_ta_sma"]) / sec_all["ft_ta_sma"] * 100.0
@@ -19,14 +20,14 @@ if False:
   sec_all["ft_ta_sma_p100"] = sec_all.groupby("symbol").apply(lambda sec: ta.sma(close=sec.close, length=100))
   sec_all
 
-if False:
-  # TODO difference from mean disparity or base/quote mean disparity
-  # difference from top rank and bottom rank strength
-  DATEFIELD = "datetime" # date
-
-  sec_all["ft_ta_strength"] = sec_all["ft_ta_dspi"]
-  sec_all[f"ft_im_strength_rank"] = sec_all.groupby(DATEFIELD)[f"ft_ta_strength"].rank()
-
+# %%
+def get_im_rank_features(sec, indicator_field="dspi_p200", date_field = "date"):
+  sec["ft_im_strength"] = sec[f"ft_ta_{indicator_field}"]
+  sec[f"ft_im_strength_rank"] = sec.groupby(date_field)[f"ft_im_strength"].rank()
+  sec[f"ft_im_{indicator_field}_rank"] = sec[f"ft_im_strength_rank"]
+  
+if __name__ == "__main__":
+  get_im_rank_features(sec_all)
   sec_all.sort_values(DATEFIELD)
 
 # pn.extension()
