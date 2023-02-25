@@ -51,7 +51,7 @@ def get_features_combo(sec, indicators, periods):
         sec[f"{indicator}_p{period}"] = sec["close"].rolling(period).mean()
       if indicator == "ft_ta_dspi":
         sec[f"ft_ta_sma_p{period}"] = sec["close"].rolling(period).mean()
-        sec[f"ft_ta_dspi_p{period}"] = (sec["close"] - sec[f"ft_ta_sma_p{period}"]) / sec[f"ft_ta_sma_{period}"] * 100.0
+        sec[f"ft_ta_dspi_p{period}"] = (sec["close"] - sec[f"ft_ta_sma_p{period}"]) / sec[f"ft_ta_sma_p{period}"] * 100.0
         
       try:
         import pandas_ta as ta
