@@ -49,7 +49,10 @@ def get_features_combo(sec, indicators, periods):
         sec[f"ft_ta_kj_trend_down_p{period}"] = sec["close"] < sec["close"].shift(period)
       if indicator == "ft_ta_sma":
         sec[f"{indicator}_p{period}"] = sec["close"].rolling(period).mean()
-
+      if indicator == "ft_ta_dspi":
+        sec[f"ft_ta_sma_p{period}"] = sec["close"].rolling(period).mean()
+        sec[f"ft_ta_dspi_p{period}"] = (sec["close"] - sec[f"ft_ta_sma_p{period}"]) / sec_all[f"ft_ta_sma_{period}"] * 100.0
+        
       try:
         import pandas_ta as ta
         if indicator == "ft_ta_rsi":
@@ -57,4 +60,4 @@ def get_features_combo(sec, indicators, periods):
         if indicator == "ft_ta_stoch":
           sec[f"ft_ta_stoch_p{period}"] = ta.stoch(close=sec.close, high=sec.high, low=sec.low, length=14)[f"STOCHk_{period}_3_3"]
       except:
-        print ("missing ta libraries")
+        print (f"missing ta libraries for {indicator}")
