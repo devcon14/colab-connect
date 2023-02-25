@@ -27,11 +27,11 @@ def get_im_rank_features(sec, indicator_field="dspi_p200", date_field = "date"):
   sec[f"ft_im_{indicator_field}_rank"] = sec[f"ft_im_strength_rank"]
   
 if __name__ == "__main__":
+  # pn.extension()
+  # hv.extension("bokeh")
+  
   get_im_rank_features(sec_all)
   sec_all.sort_values(DATEFIELD)
-
-# pn.extension()
-hv.extension("bokeh")
 
 def merge_and_compare(universe, symbol_to_compare):
   # easier and faster way to compare
