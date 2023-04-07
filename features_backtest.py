@@ -43,6 +43,7 @@ def backtest_metrics(sec, future_horizon = 5, adj=None):
   sec[f"future_mfe_p{future_horizon}"] = sec["mae"]
 
   sec["f2a"] = sec["mfe"] - sec["mae"]
+  sec["asymmetry"] = np.abs(sec["f2a"])
   sec[f"future_f2a_p{future_horizon}"] = sec["f2a"]
 
   return sec
