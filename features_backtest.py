@@ -22,7 +22,24 @@ def prior_to_future_metrics(sec, future_horizon):
     
   sec[f"future_change{suffix}"] = sec["change"].shift(-future_horizon)
   sec[f"future_returns{suffix}"] = sec["returns"].shift(-future_horizon)
-  
+
+err_log = []
+def mae(x):
+  try:
+    # NOTE must use iloc to avoid errors on named indices
+    return x.iloc[0] - np.min(x)
+  except Exception as e:
+    err_log.append((e, x))
+    return 0
+
+def mfe(x):
+  try:
+    # NOTE must use iloc to avoid errors on named indices
+    return np.max(x) - x.iloc[0]
+  except Exception as e:
+    err_log.append((e, x))
+    return 0
+
 def backtest_metrics(sec, future_horizon = 5, adj=None):
   """
   Future returns for backtesting.
@@ -34,12 +51,13 @@ def backtest_metrics(sec, future_horizon = 5, adj=None):
     sec["future_returns"] *= adj
 
   # ternary is for rolling window exceptions
-  sec["mae"] = sec["close"].rolling(future_horizon).apply(lambda x: x[0] - np.min(x) if len(x) >= future_horizon else 0)
+  sec["mae"] = sec["close"].rolling(future_horizon).apply(lambda x: mae(x))
   sec["mae"] = sec["mae"].shift(-future_horizon)
   sec[f"future_mae_p{future_horizon}"] = sec["mae"]
   
-  sec["mfe"] = sec["close"].rolling(future_horizon).apply(lambda x: np.max(x) - x[0] if len(x) >= future_horizon else 0)
+  sec["mfe"] = sec["close"].rolling(future_horizon).apply(lambda x: mfe(x))
   sec["mfe"] = sec["mfe"].shift(-future_horizon)
+  # symantic name to indicate what the horizon was
   sec[f"future_mfe_p{future_horizon}"] = sec["mae"]
 
   sec["f2a"] = sec["mfe"] - sec["mae"]
