@@ -64,6 +64,13 @@ def get_features_viz(sec, prefix="ts", tt=True):
   # sec_all.loc[:, f"{prefix}_dt_dow"] = sec_all["date"].dt.dayofweek
   sec_all[f"{prefix}_dt_dow"] = sec_all["date"].dt.strftime("%w:%a")
   
+def get_features_for_symbol(sec, symbol):
+  # features that are specific to a symbol, like quarter theory / binning
+  if symbol == "SPY":
+    sec.loc[sec.symbol==symbol, "ft_qtt_100"] = sec["close"].apply(lambda x: int(x % 100 / 10) * 10)
+    sec.loc[sec.symbol==symbol, "ft_qtt_10"] = sec["close"].apply(lambda x: int(x % 10))
+    sec.loc[sec.symbol==symbol, 'ft_ta_dspi_p200_bin'] = sec['ft_ta_dspi_p200'].fillna(0).apply(lambda x: int(x/10.0) * 10.0)
+
   if tt:
     get_features_viz_tt(sec)
   
