@@ -82,6 +82,22 @@ def get_features_dttm(sec):
   sec['ft_dt_NFP'] = sec['ft_dt_dow_wom'].replace("5:0",1)
   sec['ft_dt_options_expiry'] = sec['ft_dt_dow_wom'].replace("5:4",1)
 
+def fix_ml_columns(sec, first_run=True):
+  if first_run:
+    del sec["ft_dt_YM"]
+    sec["ft_dt_doy"] = sec["ft_dt_doy"].apply(lambda x: int(x[-2:]))
+    sec["ft_dt_dow"] = sec["ft_dt_dow"].apply(lambda x: int(x[0]))
+
+  for col in ["ft_dt_election", "ft_dt_shmita", "ft_dt_season_9", "ft_dt_decennial", "ft_dt_season_13"]:
+    sec[col] = sec[col].astype("category")
+
+  for col in ["ft_dt_NFP", "ft_dt_options_expiry"]:
+    sec[col] = sec[col].astype("category")
+
+  for col in ["ft_dt_dow_wom", "ft_dt_dow_wom_code"]:
+    sec[col] = sec[col].astype("category")
+
+  print (sec.columns)
+  
 if __name__ == "__main__":
   get_features_dttm(sec)
-  
