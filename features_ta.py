@@ -52,7 +52,21 @@ def get_features_combo(sec, indicators, periods):
       if indicator == "ft_ta_dspi":
         sec[f"ft_ta_sma_p{period}"] = sec["close"].rolling(period).mean()
         sec[f"ft_ta_dspi_p{period}"] = (sec["close"] - sec[f"ft_ta_sma_p{period}"]) / sec[f"ft_ta_sma_p{period}"] * 100.0
-        
+      # from kaggle stats bundle
+      if indicator == "ft_ta_stats":
+        series = sec["close"]
+        r = series.rolling(period)
+        m = r.mean()
+        s = r.std()
+        z = (series-m)/s
+        dsp = (series-m)/series
+        prefix = "ft_ta"
+        sec[f'{prefix}_dspi_p{period}'] = dsp
+        add_zscore = True
+        if add_zscore:
+            sec[f'{prefix}_zscore_p{period}'] = z
+            sec[f'{prefix}_std_p{period}'] = s
+
       try:
         import pandas_ta as ta
         if indicator == "ft_ta_rsi":
@@ -60,4 +74,5 @@ def get_features_combo(sec, indicators, periods):
         if indicator == "ft_ta_stoch":
           sec[f"ft_ta_stoch_p{period}"] = ta.stoch(close=sec.close, high=sec.high, low=sec.low, length=14)[f"STOCHk_{period}_3_3"]
       except:
-        print (f"missing ta libraries for {indicator}")
+        if indicator in ["ft_ta_rsi", "ft_ta_stoch"]:
+          print (f"missing ta libraries for {indicator}")
