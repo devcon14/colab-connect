@@ -63,32 +63,45 @@ class Universe:
     with open("/content/drive/MyDrive/market_data/api_keys.json") as fh:
       self.api_keys = json.load(fh)
 
-  def fetch_symbol_data(universe, symbol, resolution="1D"):
+  def fetch_symbol_data(universe, symbol, resolution="1D", source="av"):
     if resolution == "1D":
       if "/" in symbol:
         sec = web.DataReader(symbol, "av-forex-daily", api_key=universe.api_keys["ALPHAVANTAGE_API"])
       else:
         sec = web.DataReader(symbol, "av-daily-adjusted", api_key=universe.api_keys["ALPHAVANTAGE_API"])
     elif resolution == "1H":
-      # read from stored dukascopy
-      # /content/drive/MyDrive/market_data/AUDCAD_Candlestick_1_Hour_BID_03.01.2006-26.09.2022.zip
-      from pathlib import Path
-      for p in Path("/content/drive/MyDrive/market_data/").glob(f"{symbol}*"):
-        print (p)
-        sec = pd.read_csv(p)
-        # looks like a bug where it takes GMT+2 and changes it to -2
-        # sec["datetime"] = pd.to_datetime(sec["Local time"])
+      if source == "dukascopy":
+        # read from stored dukascopy
+        # /content/drive/MyDrive/market_data/AUDCAD_Candlestick_1_Hour_BID_03.01.2006-26.09.2022.zip
+        from pathlib import Path
+        for p in Path("/content/drive/MyDrive/market_data/").glob(f"{symbol}*"):
+          print (p)
+          sec = pd.read_csv(p)
+          # looks like a bug where it takes GMT+2 and changes it to -2
+          # sec["datetime"] = pd.to_datetime(sec["Local time"])
 
-        # so I chop the zone and localize myself
-        sec["datetime"] = pd.to_datetime(sec["Local time"].apply(lambda x: x[:24]))
-        sec["date"] = sec["datetime"].dt.date
-        sec["datetime"] = sec["datetime"].dt.tz_localize('Africa/Johannesburg')
+          # so I chop the zone and localize myself
+          sec["datetime"] = pd.to_datetime(sec["Local time"].apply(lambda x: x[:24]))
+          sec["date"] = sec["datetime"].dt.date
+          sec["datetime"] = sec["datetime"].dt.tz_localize('Africa/Johannesburg')
 
-        # probably all I need, dttm functions use index and overwrite later
-        sec.set_index("Local time", inplace=True)
-        # del sec["Local time"]
-        sec.columns = sec.columns.str.lower()
+          # probably all I need, dttm functions use index and overwrite later
+          sec.set_index("Local time", inplace=True)
+          # del sec["Local time"]
+          sec.columns = sec.columns.str.lower()
+      elif source == "av":
+        import requests
+        ALPHAVANTAGE_API = universe.api_keys["ALPHAVANTAGE_API"]
+        url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol={symbol}&interval=60min&apikey={ALPHAVANTAGE_API}'
+        url += '&outputsize=full'
+        sec = pd.read_csv(url)
+        # sec.iloc[0].values
+          
     return sec
+
+  def use_dataframe(universe, sec):
+    universe.sec_all = sec
+    universe.sec_filtered = sec
 
   def custom_features(self, sec):
     pass
@@ -153,24 +166,7 @@ class Universe:
     for orphan in orphans:
       del universe.sec_dict[orphan]
 
-  # def aggregate_heatmap(universe, xkey, color_field, ykey, agg_fn, split_by, zkey):
-  def aggregate_heatmap(universe, xkey, ykey, zkey, agg_fn):
-    data_plt = pd.pivot_table(
-        universe.sec_filtered,
-        index=xkey,
-        values=ykey,
-        columns=zkey,
-        aggfunc=[
-            "mean",
-            "std",
-            "count",
-            winrate
-        ])
-    return data_plt
-
-  def aggregate(universe, xkey, color_field, ykey, agg_fn, split_by):
-    return_field = ykey
-    # grp = universe.sec_all.groupby
+  def aggregate(universe, xkey, return_field, agg_fn="mean", split_by="symbol", color_field="all"):
     grp = universe.sec_filtered.groupby([split_by, xkey])[return_field].agg(
         [
             "mean",
@@ -236,121 +232,3 @@ class CustomUniverse(Universe):
     sec["signal_long"] = (sec["ft_ta_rsi_p2"] >= 80) & (sec["ft_ta_kj_trend_up_p20"]==False)
     # custom fn
     # sec["signal_long"] = (universe.sec_all["ft_ta_rsi_p2"] >= 80) & (universe.sec_all["ft_ta_kj_trend_up_p20"]==False)
-
-# %%
-# I want to make ykey the target variable always
-if True:
-  def interactable_plot(
-      universe,
-      symbols,
-      # CH01
-      chart_type=None,
-      xkey=None,
-      ykey=None,
-      filter_by=None,
-      #
-      agg_fn="mean",
-      cum_fn=None,
-      color_field="all",
-      split_by="symbol",
-      # range_slider=(0,1)
-      range_start=None,
-      # range_length=None,
-      future_horizon=None,
-      # CH02
-      xbin_steps=None,
-      ybin_steps=None,
-      zbin_steps=None,
-      #
-      zkey=None,
-      # ykeys?
-      resolution="1D"
-  ):
-
-    return_field = ykey
-    agg_field = agg_fn
-    filter_query = filter_by
-
-    # consider .style.formatting for mean_str
-    hover_col_list = ["count", "std", "winrate", "mean_str", "index"]
-
-    universe.fetch_symbols_data(symbols, resolution)
-    # CH01
-    # allow to only select symbols without any further tranforms
-    # universe.remove_orphans(symbols)
-    # universe.concat_securities()
-    if chart_type is None:
-      return symbols
-
-    # update backtest features
-    if future_horizon:
-      universe.update_backtest_features(universe.sec_all, future_horizon)
-
-    # CH02
-    if xbin_steps and xbin_steps > 0:
-      universe.create_bin_field(xkey, xbin_steps, na_val=0)
-      xkey = xkey + "_bin"
-    if ybin_steps and ybin_steps > 0:
-      universe.create_bin_field(ykey, ybin_steps, na_val=0)
-      ykey = ykey + "_bin"
-      return_field = ykey
-    if zbin_steps and zbin_steps > 0:
-      universe.create_bin_field(zkey, zbin_steps, na_val=0)
-      zkey = zkey + "_bin"
-      return_field = zkey
-    #
-
-    # filter
-    universe.sec_all["all"] = True
-    universe.sec_filtered = universe.sec_all.query(filter_by)
-
-    if zkey:
-      # universe.df_agg = universe.aggregate_heatmap(xkey, color_field, return_field, agg_fn, split_by, zkey=zkey)
-      # return universe.df_agg
-      universe.df_agg = universe.aggregate_heatmap(xkey, ykey, zkey, agg_fn)
-      return universe.df_agg
-      # return universe.df_agg[agg_fn]
-      # return hv.Table(universe.df_agg[agg_fn])
-      # return universe.df_agg[agg_fn].style.background_gradient(cmap ='magma')
-      
-      ## melt_banana = pd.melt(df_agg.reset_index(), id_vars=xkey, var_name=zkey, value_name=ykey)
-      # return hv.HeatMap(melt_banana).opts(tools=["hover"])
-
-    # ---
-    else:
-      universe.df_agg = universe.aggregate(xkey, color_field, return_field, agg_fn, split_by)
-
-    if cum_fn:
-      agg_field = f"{agg_field}_{cum_fn}"
-    kwargs = {
-        "kind": chart_type,
-        "x": xkey,
-        "y": agg_field,
-        "by": split_by,
-        "hover_cols": hover_col_list
-        }
-    if zkey:
-      kwargs["z"] = zkey
-      
-    if color_field != "all":
-      kwargs["color"] = "color"
-    if chart_type == "errorbars":
-      kwargs["yerr1"] = "std"
-      del kwargs["hover_cols"]
-
-    # CH02 pre set hvplot
-    # universe.layout = universe.df_agg.hvplot(**kwargs)
-    universe.layout = universe.df_agg.plot(**kwargs)
-
-    # re-order x axis: https://discourse.holoviz.org/t/how-to-control-bar-order-in-using-holoviews-bars/51/2
-    kwargs = {}
-    kwargs[xkey] = list(universe.df_agg[xkey])
-    universe.layout = universe.layout.redim.values(**kwargs)
-    # final_plt = final_plt.opts(tools=["hover", "tap"])
-
-    # range
-    if range_start:
-      range_vline = hv.VLine(range_start) * hv.VLine(range_start+future_horizon)
-      universe.layout = universe.layout * range_vline
-
-    return universe.layout
