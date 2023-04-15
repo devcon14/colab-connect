@@ -92,11 +92,17 @@ class Universe:
       elif source == "av":
         import requests
         ALPHAVANTAGE_API = universe.api_keys["ALPHAVANTAGE_API"]
-        url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol={symbol}&interval=60min&apikey={ALPHAVANTAGE_API}'
-        url += '&outputsize=full'
-        sec = pd.read_csv(url)
+        if "/" in symbol:
+          pass
+        else:
+          url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol={symbol}&interval={resolution}&apikey={ALPHAVANTAGE_API}'
+          url += '&outputsize=full'
+          sec = pd.read_csv(url)
         # sec.iloc[0].values
-          
+      else:
+        print ("unexpected parameters")        
+    
+    sec["symbol"] = symbol
     return sec
 
   def use_dataframe(universe, sec):
