@@ -13,7 +13,8 @@ try:
   import hvplot.pandas
 except:
   # !pip install hvplot
-  import hvplot.pandas
+  # import hvplot.pandas
+  pass
 
 import json
 import math
@@ -63,42 +64,55 @@ class Universe:
     with open("/content/drive/MyDrive/market_data/api_keys.json") as fh:
       self.api_keys = json.load(fh)
 
-  def fetch_symbol_data(universe, symbol, resolution="1D", source="av"):
-    if resolution == "1D":
-      if "/" in symbol:
-        sec = web.DataReader(symbol, "av-forex-daily", api_key=universe.api_keys["ALPHAVANTAGE_API"])
-      else:
-        sec = web.DataReader(symbol, "av-daily-adjusted", api_key=universe.api_keys["ALPHAVANTAGE_API"])
-    elif resolution == "1H":
-      if source == "dukascopy":
-        # read from stored dukascopy
-        # /content/drive/MyDrive/market_data/AUDCAD_Candlestick_1_Hour_BID_03.01.2006-26.09.2022.zip
-        from pathlib import Path
-        for p in Path("/content/drive/MyDrive/market_data/").glob(f"{symbol}*"):
-          print (p)
-          sec = pd.read_csv(p)
-          # looks like a bug where it takes GMT+2 and changes it to -2
-          # sec["datetime"] = pd.to_datetime(sec["Local time"])
+  def fetch_symbol_data(universe, symbol, resolution="1D", source="av", slices=None):
+    if source == "dukascopy":
+      # read from stored dukascopy
+      # TODO consider caching some sets in github
+      # /content/drive/MyDrive/market_data/AUDCAD_Candlestick_1_Hour_BID_03.01.2006-26.09.2022.zip
+      from pathlib import Path
+      for p in Path("/content/drive/MyDrive/market_data/").glob(f"{symbol}*"):
+        print (p)
+        sec = pd.read_csv(p)
+        # looks like a bug where it takes GMT+2 and changes it to -2
+        # sec["datetime"] = pd.to_datetime(sec["Local time"])
 
-          # so I chop the zone and localize myself
-          sec["datetime"] = pd.to_datetime(sec["Local time"].apply(lambda x: x[:24]))
-          sec["date"] = sec["datetime"].dt.date
-          sec["datetime"] = sec["datetime"].dt.tz_localize('Africa/Johannesburg')
+        # so I chop the zone and localize myself
+        sec["datetime"] = pd.to_datetime(sec["Local time"].apply(lambda x: x[:24]))
+        sec["date"] = sec["datetime"].dt.date
+        sec["datetime"] = sec["datetime"].dt.tz_localize('Africa/Johannesburg')
 
-          # probably all I need, dttm functions use index and overwrite later
-          sec.set_index("Local time", inplace=True)
-          # del sec["Local time"]
-          sec.columns = sec.columns.str.lower()
+        # probably all I need, dttm functions use index and overwrite later
+        sec.set_index("Local time", inplace=True)
+        # del sec["Local time"]
+        sec.columns = sec.columns.str.lower()
     elif source == "av":
-      import requests
-      ALPHAVANTAGE_API = universe.api_keys["ALPHAVANTAGE_API"]
-      if "/" in symbol:
-        pass
+      if resolution == "1D":
+        if "/" in symbol:
+          sec = web.DataReader(symbol, "av-forex-daily", api_key=universe.api_keys["ALPHAVANTAGE_API"])
+        else:
+          sec = web.DataReader(symbol, "av-daily-adjusted", api_key=universe.api_keys["ALPHAVANTAGE_API"])
       else:
-        url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol={symbol}&interval={resolution}&apikey={ALPHAVANTAGE_API}'
-        url += '&outputsize=full'
-        sec = pd.read_csv(url)
-      # sec.iloc[0].values
+        import requests
+        ALPHAVANTAGE_API = universe.api_keys["ALPHAVANTAGE_API"]
+        
+        if "/" in symbol:
+          # NOTE intraday forex is currently premium
+          pass
+        else:
+          url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol={symbol}&interval={resolution}&apikey={ALPHAVANTAGE_API}'
+          url += '&outputsize=full'
+          if slices:
+            df_arr = []
+            for slice in slices:
+              url_slice = url + f"&slice={slice}"
+              df = pd.read_csv(url)
+              df_arr.append(df)
+            sec = pd.concat(df_arr)
+          else:
+            sec = pd.read_csv(url)
+            # sec.iloc[0].values
+            
+    elif resolution == "1H":
     else:
       print ("unexpected parameters")        
     
