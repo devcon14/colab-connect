@@ -105,7 +105,7 @@ class Universe:
             df_arr = []
             for slice in slices:
               url_slice = url + f"&slice={slice}"
-              df = pd.read_csv(url)
+              df = pd.read_csv(url_slice)
               df_arr.append(df)
             sec = pd.concat(df_arr)
           else:
