@@ -112,7 +112,7 @@ class Universe:
             sec = pd.read_csv(url)
             # sec.iloc[0].values
             
-    elif resolution == "1H":
+    # elif resolution == "1H":
     else:
       print ("unexpected parameters")        
     
