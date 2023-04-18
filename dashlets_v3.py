@@ -31,7 +31,8 @@ try:
   import hvplot.pandas
 except:
   # !pip install hvplot
-  import hvplot.pandas
+  # import hvplot.pandas
+  pass
 
 import holoviews as hv
 import panel as pn
