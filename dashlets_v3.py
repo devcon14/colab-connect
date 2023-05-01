@@ -256,7 +256,7 @@ class CustomUniverse(Universe):
 
 class Utils:
 
-  @static
+  @staticmethod
   def norm_datetime(sec, field_name="time", from_zone="UTC", to_zone="Africa/Johannesburg", suffix="_local"):
     """
     Creates timezone aware date field and sorts by that field.
@@ -277,7 +277,7 @@ class Utils:
 
     sec.sort_values(by=f"datetime{suffix}", ascending=True, inplace=True)
     
-  @static
+  @staticmethod
   def deduplicate(sec):
     # sec = sec.drop_duplicates()
     print (f"before de-dup {len(sec)}")
@@ -285,7 +285,7 @@ class Utils:
     print (f"after de-dup {len(sec)}")
     return sec
 
-  @static
+  @staticmethod
   def add_level_pd(name, boolean_mask, price_key):
     """
     >>> add_level_pd("dayclose", sec["graphtm"]==daily_close_time, "close")
@@ -294,6 +294,7 @@ class Utils:
     # bt or chart
     btprefix = "chart"
     sec[f"ft_{name}_is_level"] = boolean_mask
-    sec[f"{btprefix}_{name}_{price_key}_level"] = np.where(sec[f"ft_{name}_is_level"], sec[price_key], None).ffill()
-    sec[f"{btprefix}_{name}_{price_key}_level_dspi"] = sec[f"{btprefix}_{name}_{price_key}_level"] / sec[price_key]
+    # get price_key where mask is true else return None
+    sec[f"{btprefix}_{name}_{price_key}_level"] = sec[price_key].where(boolean_mask, None).ffill()
+    sec[f"ft_{name}_{price_key}_level_dspi"] = sec[f"{btprefix}_{name}_{price_key}_level"] / sec[price_key]
   
