@@ -253,3 +253,47 @@ class CustomUniverse(Universe):
     sec["signal_long"] = (sec["ft_ta_rsi_p2"] >= 80) & (sec["ft_ta_kj_trend_up_p20"]==False)
     # custom fn
     # sec["signal_long"] = (universe.sec_all["ft_ta_rsi_p2"] >= 80) & (universe.sec_all["ft_ta_kj_trend_up_p20"]==False)
+
+class Utils:
+
+  @static
+  def norm_datetime(sec, field_name="time", from_zone="UTC", to_zone="Africa/Johannesburg", suffix="_local"):
+    """
+    Creates timezone aware date field and sorts by that field.
+    If from_zone is None datetime and localisation is bypassed for performance.
+    # almost too trivial? localise,sort,de-dup,set_index?
+    
+    >>> norm_datetime(sec, to_zone='America/Chicago', suffix="_exchange")
+    """
+    # local or norm?
+    # Universe.DATE_FIELD
+    # suffix = "_norm"
+
+    if from_zone:
+      sec[f"datetime{suffix}"] = pd.to_datetime(sec[field_name])
+      sec[f"datetime{suffix}"] = sec[f"datetime{suffix}"].dt.tz_localize(from_zone).dt.tz_convert(to_zone)
+    else:
+      sec[f"datetime{suffix}"] = sec[field_name]
+
+    sec.sort_values(by=f"datetime{suffix}", ascending=True, inplace=True)
+    
+  @static
+  def deduplicate(sec):
+    # sec = sec.drop_duplicates()
+    print (f"before de-dup {len(sec)}")
+    sec = sec[~sec.index.duplicated(keep='first')]
+    print (f"after de-dup {len(sec)}")
+    return sec
+
+  @static
+  def add_level_pd(name, boolean_mask, price_key):
+    """
+    >>> add_level_pd("dayclose", sec["graphtm"]==daily_close_time, "close")
+    """
+    import numpy as np
+    # bt or chart
+    btprefix = "chart"
+    sec[f"ft_{name}_is_level"] = boolean_mask
+    sec[f"{btprefix}_{name}_{price_key}_level"] = np.where(sec[f"ft_{name}_is_level"], sec[price_key], None).ffill()
+    sec[f"{btprefix}_{name}_{price_key}_level_dspi"] = sec[f"{btprefix}_{name}_{price_key}_level"] / sec[price_key]
+  
