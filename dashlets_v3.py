@@ -286,7 +286,7 @@ class Utils:
     return sec
 
   @staticmethod
-  def add_level_pd(name, boolean_mask, price_key):
+  def add_level_pd(sec, name, boolean_mask, price_key):
     """
     >>> add_level_pd("dayclose", sec["graphtm"]==daily_close_time, "close")
     """
@@ -297,4 +297,3 @@ class Utils:
     # get price_key where mask is true else return None
     sec[f"{btprefix}_{name}_{price_key}_level"] = sec[price_key].where(boolean_mask, None).ffill()
     sec[f"ft_{name}_{price_key}_level_dspi"] = sec[f"{btprefix}_{name}_{price_key}_level"] / sec[price_key]
-  
