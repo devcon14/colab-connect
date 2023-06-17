@@ -35,9 +35,22 @@ def loss_streak_nb(x):
             return streak
     return streak
 
+@jit(nopython=True)
+def fn_nr_of(cr):
+  nr_of = 0
+  for index in range(len(cr)-1):
+    if cr[-1] < cr[-index-2]:
+      nr_of += 1
+    else:
+      return nr_of
+  return nr_of
+
 if __name__ == "__main__":
     sec["ft_ta_win_streak"] = sec["close"].rolling(10).apply(win_streak_nb, engine="numba", raw=True)
     sec["ft_ta_loss_streak"] = sec["close"].rolling(10).apply(loss_streak_nb, engine="numba", raw=True)
+    CND_WINDOW = 10
+    sec["ft_cnd_range"] = sec["high"] - sec["low"]
+    sec["ft_cnd_nr_of"] = sec["ft_cnd_range"].rolling(CND_WINDOW).apply(fn_nr_of, engine="numba", raw=True)
 
 # %%
 dow_month_cache = {}
