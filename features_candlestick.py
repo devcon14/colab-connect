@@ -21,9 +21,16 @@ def get_features_cnd(sec):
   sec["ft_cnd_low_breakout"] = sec["low"] < sec["low"].shift(1)
   # kaggle convention was ft_can_lower_shadow...
   # could try auto prefix all columns
-  sec["ft_cnd_lower_shadow"] = sec.query("high != low").apply(lambda x: (min(x["open"], x["close"])-x["low"]) / (x["high"] - x["low"]), axis="columns")
-  sec["ft_cnd_upper_shadow"] = sec.query("high != low").apply(lambda x: (x["high"]-max(x["open"], x["close"])) / (x["high"] - x["low"]), axis="columns")
-
+  # this approach sometimes met re-indexing issues with duplicate labels
+  # sec["ft_cnd_lower_shadow"] = sec.query("high != low").apply(lambda x: (min(x["open"], x["close"])-x["low"]) / (x["high"] - x["low"]), axis="columns")
+  # sec["ft_cnd_upper_shadow"] = sec.query("high != low").apply(lambda x: (x["high"]-max(x["open"], x["close"])) / (x["high"] - x["low"]), axis="columns")
+  def fn_lower_shadow(x):
+   return (min(x["open"], x["close"])-x["low"]) / (x["high"] - x["low"]) if x["high"] != x["low"] else 0
+  sec["ft_cnd_lower_shadow"] = sec.apply(fn_lower_shadow, axis="columns")
+  def fn_upper_shadow(x):
+   return (x["high"]-max(x["open"], x["close"])) / (x["high"] - x["low"]) if x["high"] != x["low"] else 0
+  sec["ft_cnd_upper_shadow"] = sec.apply(fn_upper_shadow, axis="columns")
+  
   sec["ft_cnd_closing_high"] = sec["close"] > sec["high"].shift(1)
   sec["ft_cnd_closing_low"] = sec["close"] < sec["low"].shift(1)
   sec["ft_cnd_closing_high_1"] = sec["ft_cnd_closing_high"].shift(1)
