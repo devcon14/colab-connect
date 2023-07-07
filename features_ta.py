@@ -32,10 +32,6 @@ def get_features_indicators(sec, periods=[2]):
 def get_features_combo(sec, indicators, periods):
   for period in periods:
     for indicator in indicators:
-      if indicator == "ft_ta_hilo_spread":
-        sec[f"ft_ta_high_p{period}"] = sec["high"].rolling(period).max()
-        sec[f"ft_ta_low_p{period}"] = sec["low"].rolling(period).min()
-        sec[f"{indicator}_p{period}"] = sec[f"ft_ta_high_p{period}"] - sec[f"ft_ta_low_p{period}"]
       if indicator == "ft_ta_high":
         sec[f"{indicator}_p{period}"] = sec["high"].rolling(period).max()
         # sec["ft_cross_high_40"] = (sec["ft_high_past_40"] > sec["ft_high_past_40"].shift(1))
@@ -43,6 +39,12 @@ def get_features_combo(sec, indicators, periods):
       if indicator == "ft_ta_low":
         sec[f"{indicator}_p{period}"] = sec["low"].rolling(period).min()
         sec[f"ft_ta_cross_low_{period}"] = sec["low"] < sec[f"ft_ta_low_p{period}"].shift(1)
+      if indicator == "ft_ta_donchian":
+        sec[f"ft_ta_donchian_high_p{period}"] = sec["high"].rolling(period).max()
+        sec[f"ft_ta_donchian_low_p{period}"] = sec["low"].rolling(period).min()
+        sec[f"ft_ta_donchian_spread_p{period}"] = sec[f"ft_ta_donchian_high_p{period}"] - sec[f"ft_ta_donchian_low_p{period}"]
+        sec[f"ft_ta_faststoch_p{period}"] = (sec["close"] - sec[f"ft_ta_donchian_low_p{period}"]) / sec[f"ft_ta_donchian_spread_p{period}"]
+
       if indicator == "ft_ta_kj_trend_up":
         sec[f"ft_ta_kj_trend_up_p{period}"] = sec["close"] >= sec["close"].shift(period)
       if indicator == "ft_ta_kj_trend_down":
@@ -68,11 +70,12 @@ def get_features_combo(sec, indicators, periods):
             sec[f'{prefix}_std_p{period}'] = s
 
       try:
-        import pandas_ta as ta
-        if indicator == "ft_ta_rsi":
-          sec[f"{indicator}_p{period}"] = ta.rsi(close=sec.close, length=period)
-        if indicator == "ft_ta_stoch":
-          sec[f"ft_ta_stoch_p{period}"] = ta.stoch(close=sec.close, high=sec.high, low=sec.low, length=14)[f"STOCHk_{period}_3_3"]
+        if indiator in ["ft_ta_rsi", "ft_ta_stoch"]: 
+          import pandas_ta as ta
+          if indicator == "ft_ta_rsi":
+            sec[f"{indicator}_p{period}"] = ta.rsi(close=sec.close, length=period)
+          if indicator == "ft_ta_stoch":
+            sec[f"ft_ta_stoch_p{period}"] = ta.stoch(close=sec.close, high=sec.high, low=sec.low, length=14)[f"STOCHk_{period}_3_3"]
       except:
         if indicator in ["ft_ta_rsi", "ft_ta_stoch"]:
           print (f"missing ta libraries for {indicator}")
