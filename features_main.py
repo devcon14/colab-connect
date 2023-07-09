@@ -3,6 +3,7 @@ from features_candlestick import get_features_cnd
 # 40in20out, volume spike
 # for trend and setting stops
 from features_ta import get_features_ta as get_features_cnd_trend
+from features_ta import get_features_combo
 
 # win streaks, stats_ta, bizdays, dow_by_week
 from features_kaggle import get_features as get_features_kaggle
@@ -105,6 +106,51 @@ def fix_ml_columns(sec, first_run=True):
     sec[col] = sec[col].astype("category")
 
   print (sec.columns)
-  
+
+class Feat:
+
+  def rsi(df, periods = 14, ema = True):
+      """
+      Returns a pd.Series with the relative strength index.
+      # https://www.roelpeters.be/many-ways-to-calculate-the-rsi-in-python-pandas/
+      """
+      close_delta = df['close'].diff()
+
+      # Make two series: one for lower closes and one for higher closes
+      up = close_delta.clip(lower=0)
+      down = -1 * close_delta.clip(upper=0)
+
+      if ema == True:
+        # Use exponential moving average
+          ma_up = up.ewm(com = periods - 1, adjust=True, min_periods = periods).mean()
+          ma_down = down.ewm(com = periods - 1, adjust=True, min_periods = periods).mean()
+      else:
+          # Use simple moving average
+          ma_up = up.rolling(window = periods, adjust=False).mean()
+          ma_down = down.rolling(window = periods, adjust=False).mean()
+
+      rsi = ma_up / ma_down
+      rsi = 100 - (100/(1 + rsi))
+      return rsi
+
+  # from smash days
+  def add_level_pd(sec, name, signal_key, price_key):
+    import numpy as np
+    sec[f"ft_{name}_level"] = np.where(sec[signal_key], sec[price_key], None)
+    sec[f"ft_{name}_level"] = sec[f"ft_{name}_level"].ffill()
+    sec[f"ft_{name}_level_{price_key}_pd"] = sec["close"] / sec[f"ft_{name}_level"]
+    # bt or chart
+    sec[f"chart_{name}_level_{price_key}"] = sec[f"ft_{name}_level"]
+    del sec[f"ft_{name}_level"]
+
+  def add_levels(sec, level_list, feature_type, col="close"):
+    """
+    >>> sec["ft_dt_hkgap_begin"] = sec["datetime_local"].dt.hour == 21
+    >>> sec["ft_dt_hkgap_end"] = sec["datetime_local"].dt.hour == 2
+    >>> Feat.add_levels(sec, ["hkgap_begin", "hkgap_end"], feature_type="ft_dt", col="close")
+    """
+    for name in level_list:
+      Feat.add_level_pd(sec, name, f"{feature_type}_{name}", col)
+
 if __name__ == "__main__":
   get_features_dttm(sec)
