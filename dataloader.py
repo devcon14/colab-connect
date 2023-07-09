@@ -294,3 +294,67 @@ if __name__ == "__main__":
       # df[["Leveraged Funds Longs", "Leveraged Funds Shorts", "Open Interest"]]
       df
   )
+
+# %%
+# from Assymetric ML
+from datetime import datetime, timedelta
+
+def get_slices_range(end):
+  slices = []
+  for index in range(1, end):
+    dt = datetime.now() - timedelta(weeks=4*index)
+    slices.append(dt.strftime("%Y-%m"))
+  return slices
+
+# %%
+import requests
+import pandas as pd
+
+def read_slice_binance(symbol, _slice, interval):
+  binance_resolution_map = {
+      "60min": "1h"
+  }
+  resolution = binance_resolution_map[interval]
+  binance_df = pd.read_csv(f"https://data.binance.vision/data/futures/um/monthly/klines/{symbol}/{resolution}/BTCUSDT-{resolution}-{_slice}.zip")
+  binance_df["datetime_local"] = pd.to_datetime(binance_df["open_time"], unit="ms") # .dt.tz_localize('UTC').dt.tz_convert("Africa/Johannesburg")
+  return binance_df
+
+def read_slice_av(symbol, _slice, interval):
+  # url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol={symbol}&interval={interval}&slice={slice}&apikey={ALPHAVANTAGE_API}'
+
+  # API changes, _EXTENDED merged
+  # looks like zone is now eastern
+  url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval={interval}'
+  # url += f"&slice={_slice}"
+  url += f"&month={_slice}"
+  url += f"&apikey={ALPHAVANTAGE_API}"
+
+  # By default, extended_hours=true and the output time series will include both the regular trading hours and the extended trading hours (4:00am to 8:00pm Eastern Time for the US market). Set extended_hours=false to query regular trading hours (9:30am to 16:00pm US Eastern Time) only.
+  # I expect standard hours between 15:30 SAST (09:30) to 22:00 SAST (16:00)
+  # extended is probably still less hours than futures
+  url += "extended_hours=false"
+
+  # By default, adjusted=true
+  url += "&datatype=csv"
+
+  url += '&outputsize=full'
+  import pandas as pd
+  print (url)
+  df = pd.read_csv(url)
+  df["datetime_local"] = pd.to_datetime(df["timestamp"]).dt.tz_localize('US/Eastern').dt.tz_convert("Africa/Johannesburg")
+  return df
+
+def merge_slices(slices, source="av"):
+  """
+  """
+  df_arr = []
+  for _slice in slices:
+    if source == "av":
+      df = read_slice_av(symbol, _slice, interval)
+    elif source == "binance":
+      df = read_slice_binance(symbol, _slice, interval)
+    df_arr.append(df)
+
+  sec = pd.concat(df_arr)
+  sec["symbol"] = symbol
+  return sec
