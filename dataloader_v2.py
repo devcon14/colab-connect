@@ -50,7 +50,7 @@ class DataLoader:
     return binance_df
 
   def read_slice_av(symbol, _slice, interval):
-    # url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol={symbol}&interval={interval}&slice={slice}&apikey={ALPHAVANTAGE_API}'
+    # url = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol={symbol}&interval={interval}&slice={slice}&apikey={DataLoader.ALPHAVANTAGE_API}'
 
     # API changes, _EXTENDED merged
     # looks like zone is now eastern
@@ -69,7 +69,7 @@ class DataLoader:
 
     # url += f"&slice={_slice}"
     url += f"&month={_slice}"
-    url += f"&apikey={ALPHAVANTAGE_API}"
+    url += f"&apikey={DataLoader.ALPHAVANTAGE_API}"
 
     # By default, extended_hours=true and the output time series will include both the regular trading hours and the extended trading hours (4:00am to 8:00pm Eastern Time for the US market). Set extended_hours=false to query regular trading hours (9:30am to 16:00pm US Eastern Time) only.
     # I expect standard hours between 15:30 SAST (09:30) to 22:00 SAST (16:00)
