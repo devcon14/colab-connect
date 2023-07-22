@@ -1,15 +1,29 @@
 from datetime import datetime, timedelta
 import requests
 import pandas as pd
+from pathlib import Path
 
 class DataLoader:
+  """
+  >>> DataLoader.configure(ALPHAVANTAGE_API, cache_home='/content/cache')
+  >>> DataLoader.read_slice_av("SPY", _slice="NA", interval="1d")
+  >>> slices = DataLoader.get_slices_range(1)
+  >>> DataLoader.merge_slices(slices, source="binance", symbol="BTCUSDT", interval="60min")
+  """
+  ALPHAVANTAGE_API = None
+  cache_home = None
+
+  # --- enums
   # only resolutions available on alphavantage
   E_RES_AV_INTRADAY = ["1min", "5min", "15min", "30min", "60min"]
-  cache_home = '/content/cache'
+  COMMON_SYMBOLS = ["SPY", "GLD", "UUP"]
+
+  def configure(ALPHAVANTAGE_API, cache_home='/content/cache'):
+    DataLoader.ALPHAVANTAGE_API = ALPHAVANTAGE_API
+    DataLoader.cache_home = cache_home
+    DataLoader.create_cache()
 
   def create_cache():
-    from pathlib import Path
-
     p = Path(DataLoader.cache_home)
     if not p.exists():
       p.mkdir()
@@ -30,7 +44,9 @@ class DataLoader:
         "1d": "1d"
     }
     resolution = binance_resolution_map[interval]
-    binance_df = pd.read_csv(f"https://data.binance.vision/data/futures/um/monthly/klines/{symbol}/{resolution}/BTCUSDT-{resolution}-{_slice}.zip")
+    url = f"https://data.binance.vision/data/futures/um/monthly/klines/{symbol}/{resolution}/BTCUSDT-{resolution}-{_slice}.zip"
+    print (url)
+    binance_df = pd.read_csv(url)
     return binance_df
 
   def read_slice_av(symbol, _slice, interval):
@@ -75,7 +91,6 @@ class DataLoader:
     
     Returns dataframe of single security.
     """
-    DataLoader.create_cache()
     df_arr = []
     for _slice in slices:
       # cache_home = '/content/drive/MyDrive/market_data/cache'
@@ -87,9 +102,9 @@ class DataLoader:
         df = pd.read_csv(cache_fullpath)
       else:
         if "av" in source:
-          df = read_slice_av(symbol, _slice, interval)
+          df = DataLoader.read_slice_av(symbol, _slice, interval)
         elif source == "binance":
-          df = read_slice_binance(symbol, _slice, interval)
+          df = DataLoader.read_slice_binance(symbol, _slice, interval)
 
       if "av" in source:
         df["datetime_local"] = pd.to_datetime(df["timestamp"]).dt.tz_localize('US/Eastern').dt.tz_convert("Africa/Johannesburg")
