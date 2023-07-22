@@ -9,6 +9,7 @@ class DataLoader:
   >>> DataLoader.read_slice_av("SPY", _slice="NA", interval="1d")
   >>> slices = DataLoader.get_slices_range(1)
   >>> DataLoader.merge_slices(slices, source="binance", symbol="BTCUSDT", interval="60min")
+  >>> DataLoader.merge_slices(["NA"], source="av", symbol="SPY", interval="1d")
   """
   ALPHAVANTAGE_API = None
   cache_home = None
