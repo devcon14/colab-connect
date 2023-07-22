@@ -2,7 +2,7 @@ import altair as alt
 
 class Dash:
 
-  def aggregate(kdims, target, max_x_bins=None, max_y_bins=None, min_count=5):
+  def aggregate(sec, kdims, target, max_x_bins=None, max_y_bins=None, min_count=5):
     if max_x_bins:
       grpby_x = pd.cut(sec[kdims[0]], max_x_bins, labels=False)
     else:
@@ -36,29 +36,29 @@ class Dash:
 
     return agg
 
-  def chart_ts(x_field, target, type=""):
+  def chart_ts(sec, x_field, target, type=""):
     """
     Line Chart:
-    >>> Dash.chart_ts(field_a, target)
-    >>> Dash.chart_ts(field_a, target, "_cumsum")
+    >>> Dash.chart_ts(sec, field_a, target)
+    >>> Dash.chart_ts(sec, field_a, target, "_cumsum")
     """
-    agg = Dash.aggregate([x_field], target, None, None, min_count=0)
+    agg = Dash.aggregate(sec, [x_field], target, None, None, min_count=0)
 
     return alt.Chart(agg).mark_line().encode(
         x=x_field,
         y=f'mean{type}',
     )
 
-  def chart_opt(kdims, target, max_x_bins=None, max_y_bins=None, min_count=5):
+  def chart_opt(sec, kdims, target, max_x_bins=None, max_y_bins=None, min_count=5):
     """
     Set max_x/y_bins to None to disable binning.
 
     Barchart:
-    >>> Dash.chart_opt([field_a], target, None).interactive()
+    >>> Dash.chart_opt(sec, [field_a], target, None).interactive()
     Heatmap:
-    >>> Dash.chart_opt([field_a, field_b], target, None).interactive()
+    >>> Dash.chart_opt(sec, [field_a, field_b], target, None).interactive()
     """
-    agg = Dash.aggregate(kdims, target, max_x_bins, max_y_bins, min_count)
+    agg = Dash.aggregate(sec, kdims, target, max_x_bins, max_y_bins, min_count)
 
     if len(kdims)==1:
       base = alt.Chart(agg).mark_bar().encode(
