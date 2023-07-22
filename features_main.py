@@ -1,3 +1,4 @@
+from numba import jit
 import pandas as pd
 from features_candlestick import get_features_cnd
 # 40in20out, volume spike
@@ -11,6 +12,31 @@ from features_kaggle import get_features as get_features_kaggle
 
 # chart features, date features
 # def get_all_features
+
+@jit(nopython=True)
+def fn_nr_of(cr):
+  """
+  >>> sec["ft_cnd_nr_of"] = sec["ft_cnd_range"].rolling(CND_WINDOW).apply(fn_nr_of, engine="numba", raw=True)
+  """
+  nr_of = 0
+  for index in range(len(cr)-1):
+    if cr[-1] < cr[-index-2]:
+      nr_of += 1
+    else:
+      return nr_of
+  return nr_of
+from numba import jit
+
+# TODO wr_of for bank candles
+def get_nr_val(x):
+  """
+  >>> sec["ft_cnd_range"].rolling(5).apply(get_nr_val)
+  """
+  for i in len(x):
+    if x.iloc[-1] < x.iloc[-i]:
+      n += 1
+    else:
+      return n
 
 # %%
 def get_features_indicators(sec, periods=[2]):
@@ -109,6 +135,25 @@ def fix_ml_columns(sec, first_run=True):
 
 class Feat:
 
+  def features_bt(sec, future_horizon=5):
+    """
+    """
+    from features_backtest import backtest_metrics
+    backtest_metrics(sec, future_horizon = future_horizon)
+
+  def fn_nr_of(cr):
+    """
+    >>> sec["ft_cnd_nr_of"] = sec["ft_cnd_range"].rolling(CND_WINDOW).apply(fn_nr_of, engine="numba", raw=True)
+    """
+    return fn_nr_of(cr)
+
+  def get_features_combo(sec, indicators, periods):
+    """
+    >>> get_features_combo(sec, ["ft_ta_donchian"], [14, 50, 100])
+    """
+    from features_ta import get_features_combo
+    return get_features_combo(sec, indicators, periods)
+
   def rsi(df, periods = 14, ema = True):
       """
       Returns a pd.Series with the relative strength index.
@@ -135,6 +180,10 @@ class Feat:
 
   # from smash days
   def add_level_pd(sec, name, signal_key, price_key):
+    """
+    Usually private method
+    See add_levels as easier to use endpoint
+    """
     import numpy as np
     sec[f"ft_{name}_level"] = np.where(sec[signal_key], sec[price_key], None)
     sec[f"ft_{name}_level"] = sec[f"ft_{name}_level"].ffill()
@@ -148,9 +197,31 @@ class Feat:
     >>> sec["ft_dt_hkgap_begin"] = sec["datetime_local"].dt.hour == 21
     >>> sec["ft_dt_hkgap_end"] = sec["datetime_local"].dt.hour == 2
     >>> Feat.add_levels(sec, ["hkgap_begin", "hkgap_end"], feature_type="ft_dt", col="close")
+
+    Returns:
+    f"ft_{name}_level": Price level
+    f"ft_{name}_level_{price_key}_pd"
     """
     for name in level_list:
       Feat.add_level_pd(sec, name, f"{feature_type}_{name}", col)
+
+  def bizdays(df):
+    """
+    """
+    from features_kaggle import bizday
+    df.loc[:, f"ft_dt_bizday-n"] = df["datetime_local"].map(lambda x: bizday(x))
+    df.loc[:, f"ft_dt_bizday+n"] = df["datetime_local"].map(lambda x: bizday(x, reverse=False))
+
+  def dow_counter(df):
+    """
+    5:4 is fourth Friday of month.
+    5:0 is first Friday.
+    """
+    from features_kaggle import dow_month_code
+    df.loc[:, "ft_dt_dow_month_code"] = df["datetime_local"].map(lambda x: f"{x.dayofweek}:{dow_month_code(x)}")
+    # TODO interesting as a levels feature
+    df['ft_dt_nfp'] = df['ft_dt_dow_month_code'].replace("5:0",1)
+    df['ft_dt_options_expiry'] = df['ft_dt_dow_month_code'].replace("5:4",1)
 
 if __name__ == "__main__":
   get_features_dttm(sec)
